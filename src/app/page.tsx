@@ -1,3 +1,10 @@
+import MediaTemplate from "@/templates/Media/MediaTemplate";
+import { MediaProvider } from "@/templates/Media/contexts/MediaContext";
+
 export default function Media() {
-	return <div></div>;
+	return (
+		<MediaProvider>
+			<MediaTemplate />
+		</MediaProvider>
+	);
 }
