@@ -44,6 +44,7 @@ const eslintConfig = [
 			"react/prop-types": 0,
 			"jsx-a11y/click-events-have-key-events": 0,
 			"@typescript-eslint/ban-ts-comment": 0,
+			"@typescript-eslint/no-non-null-asserted-optional-chain": 0,
 			"unused-imports/no-unused-imports": "warn",
 			"unused-imports/no-unused-vars": [
 				"off",
@@ -52,6 +53,16 @@ const eslintConfig = [
 					varsIgnorePattern: "^_",
 					args: "after-used",
 					argsIgnorePattern: "^_"
+				}
+			],
+			// Only applicable for nextjs-toploader
+			// Remove this if you are not using nextjs-toploader
+			"no-restricted-imports": [
+				"error",
+				{
+					name: "next/navigation",
+					importNames: ["useRouter"],
+					message: "Please import from `nextjs-toploader/app` instead."
 				}
 			]
 			// Only applicable for next-intl
