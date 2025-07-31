@@ -199,7 +199,6 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 	const getFileKey = (file: File): string => {
 		// Add safety checks but preserve original file data
 		if (!file) {
-			console.warn("Invalid file object:", file);
 			return `invalid-file-${Date.now()}-${Math.random()}`;
 		}
 
@@ -235,7 +234,6 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 			objectUrlsRef.current.add(url);
 			return url;
 		} catch (error) {
-			console.error("Error creating object URL:", error);
 			return null;
 		}
 	};
@@ -251,7 +249,6 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 		if (!file) return;
 		const fileKey = getFileKey(file);
 		setImageLoadErrors(prev => new Set(prev).add(fileKey));
-		console.error("Failed to load image preview for:", file.name || "unknown file");
 	};
 
 	// ========================================================================
@@ -312,7 +309,6 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 
 	const uploadFile = async (file: UploadedFile): Promise<void> => {
 		if (!file || !file.id) {
-			console.error("Invalid file object for upload - missing id:", file);
 			return;
 		}
 
@@ -336,8 +332,6 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 
 			// Add to active uploads
 			setActiveUploads(prev => new Set(prev).add(file.id!));
-
-			console.log(`Starting upload for: ${file.name}`);
 
 			// Create form data
 			const formData = new FormData();
@@ -370,8 +364,6 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 			// Upload successful - Remove the file from acceptedFiles immediately
 			setAcceptedFiles(prev => prev.filter(f => f.id !== file.id));
 
-			console.log(`Upload completed and removed from list: ${file.name}`);
-
 			// Optionally store completed file info if you need it later
 			// You could add it to a separate completedFiles state if needed
 		} catch (error) {
@@ -386,7 +378,6 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 						return f;
 					})
 				);
-				console.log(`Upload cancelled for: ${file.name}`);
 			} else {
 				const errorMessage = axios.isAxiosError(error)
 					? error.response?.data?.message || error.message
@@ -404,7 +395,6 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 				);
 
 				setUploadErrors(prev => new Map(prev).set(file.id!, errorMessage));
-				console.error(`Upload failed for: ${file.name}`, errorMessage);
 			}
 		} finally {
 			// Remove from active uploads
@@ -440,7 +430,6 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 		);
 
 		if (filesToAdd.length > 0) {
-			console.log(`Adding ${filesToAdd.length} files to upload queue`);
 			setUploadQueue(prev => [...prev, ...filesToAdd]);
 		}
 	};
@@ -708,10 +697,6 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 			const filesToUpload = pendingFiles.slice(0, availableSlots);
 
 			if (filesToUpload.length > 0) {
-				console.log(
-					`Processing queue: Starting ${filesToUpload.length} uploads. Active: ${activeUploads.size}/${uploadConfig.maxConcurrentUploads}`
-				);
-
 				// Start uploads
 				filesToUpload.forEach(file => {
 					uploadFile(file);

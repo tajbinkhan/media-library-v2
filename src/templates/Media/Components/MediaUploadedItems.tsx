@@ -14,7 +14,8 @@ import {
 	X
 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -93,7 +94,8 @@ export default function MediaUploadedItems({
 		getPreviewUrl,
 		handleImageError: contextHandleImageError,
 		imageLoadErrors,
-		uploadErrors
+		uploadErrors,
+		activeUploads // <-- Added
 	} = useMedia();
 
 	// State to track additional image load errors locally
@@ -211,7 +213,6 @@ export default function MediaUploadedItems({
 
 		// Safety check for file object
 		if (!file) {
-			console.warn("Invalid file object found:", item);
 			return null;
 		}
 
@@ -412,9 +413,17 @@ export default function MediaUploadedItems({
 		);
 	});
 
-	if (acceptedFiles.length === 0 && rejectedFiles.length === 0) {
-		return null;
-	}
+	// Show upload errors as toast notifications
+	const prevErrorKeys = useRef(new Set());
+	useEffect(() => {
+		const currentKeys = new Set(uploadErrors.keys());
+		for (const [key, msg] of uploadErrors.entries()) {
+			if (msg && !prevErrorKeys.current.has(key)) {
+				toast.error(msg);
+			}
+		}
+		prevErrorKeys.current = currentKeys;
+	}, [uploadErrors]);
 
 	return (
 		<div className="mx-auto w-full max-w-4xl space-y-6">
@@ -428,6 +437,7 @@ export default function MediaUploadedItems({
 					size="sm"
 					onClick={onClearAll}
 					className="text-muted-foreground hover:text-foreground bg-transparent"
+					disabled={activeUploads.size > 0} // <-- Added
 				>
 					<Trash2 className="mr-2 h-4 w-4" />
 					Clear All

@@ -3,6 +3,8 @@ import { Poppins } from "next/font/google";
 
 import { cn } from "@/lib/utils";
 
+import { Toaster } from "@/components/ui/sonner";
+
 import "./globals.css";
 
 const poppins = Poppins({
@@ -22,7 +24,9 @@ export default function RootLayout({ children }: Readonly<GlobalLayoutProps>) {
 		<html lang="en" suppressHydrationWarning>
 			<body className={cn(poppins.className, "antialiased")} suppressHydrationWarning>
 				{children}
+				<Toaster richColors position="top-right" closeButton style={{ zIndex: 9999 }} />
 			</body>
 		</html>
 	);
 }
+
