@@ -3,6 +3,13 @@
 import axios, { AxiosProgressEvent, CancelTokenSource } from "axios";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 
+import {
+	ACCEPTED_FILE_TYPES,
+	MAX_CONCURRENT_UPLOADS,
+	MAX_FILES,
+	MAX_FILE_SIZE
+} from "@/templates/Media/Constants/Media.contant";
+
 // Define types locally since .d.ts files cannot be imported
 interface UploadedFile extends File {
 	path?: string;
@@ -102,17 +109,10 @@ type MediaContextType = MediaContextState & MediaContextActions;
 // ============================================================================
 
 const defaultUploadConfig: UploadConfig = {
-	maxFileSize: 10 * 1024 * 1024, // 10MB
-	maxFiles: 20,
-	maxConcurrentUploads: 3,
-	acceptedFileTypes: {
-		"image/jpeg": [],
-		"image/png": [],
-		"image/gif": [],
-		"image/webp": [],
-		"image/svg+xml": [],
-		"application/pdf": []
-	},
+	maxFileSize: MAX_FILE_SIZE,
+	maxFiles: MAX_FILES,
+	maxConcurrentUploads: MAX_CONCURRENT_UPLOADS,
+	acceptedFileTypes: ACCEPTED_FILE_TYPES,
 	multiple: true,
 	uploadUrl: "http://localhost:8080/media/upload"
 };

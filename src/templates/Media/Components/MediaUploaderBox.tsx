@@ -1,5 +1,6 @@
 "use client";
 
+import { ACCEPTED_FILE_TYPES, MIME_TO_EXTENSION } from "../Constants/Media.contant";
 import { Loader2, Upload } from "lucide-react";
 import { useEffect } from "react";
 import { useDropzone } from "react-dropzone";
@@ -18,7 +19,7 @@ import {
 	DialogTitle
 } from "@/components/ui/dialog";
 
-import MediaUploadedItems from "./MediaUploadedItems";
+import MediaUploadedItems from "@/templates/Media/Components/MediaUploadedItems";
 import { useMedia } from "@/templates/Media/Contexts/MediaContext";
 
 interface MediaUploaderBoxProps {
@@ -65,6 +66,7 @@ export default function MediaUploaderBox({
 		accept: uploadConfig.acceptedFileTypes,
 		multiple: uploadConfig.multiple,
 		maxSize: uploadConfig.maxFileSize,
+		maxFiles: uploadConfig.maxFiles,
 		onDropAccepted: acceptedFileList => {
 			addAcceptedFiles(acceptedFileList);
 			onFilesAccepted?.(acceptedFileList);
@@ -99,6 +101,24 @@ export default function MediaUploaderBox({
 	const uploadingCount = acceptedFiles.filter(file => file.status === "uploading").length;
 	const completedCount = acceptedFiles.filter(file => file.status === "completed").length;
 
+	// Add this helper function to format file size
+	const formatFileSize = (bytes: number): string => {
+		if (bytes === 0) return "0 Bytes";
+		const k = 1024;
+		const sizes = ["Bytes", "KB", "MB", "GB"];
+		const i = Math.floor(Math.log(bytes) / Math.log(k));
+		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+	};
+
+	// Add this helper function to get file type extensions
+	const getFileTypeExtensions = (): string => {
+		const extensions = Object.keys(ACCEPTED_FILE_TYPES)
+			.map(mimeType => MIME_TO_EXTENSION[mimeType])
+			.filter(Boolean);
+
+		return extensions.join(", ");
+	};
+
 	return (
 		<Dialog open={isOpen} onOpenChange={handleClose}>
 			<DialogContent
@@ -111,7 +131,7 @@ export default function MediaUploaderBox({
 						<span>Media Uploader</span>
 					</DialogTitle>
 					<DialogDescription>
-						Upload your images to the media library. Only JPEG and PNG files are supported.
+						Upload your images to the media library. Only {getFileTypeExtensions()} are supported.
 					</DialogDescription>
 				</DialogHeader>
 
@@ -159,7 +179,7 @@ export default function MediaUploaderBox({
 								</p>
 							</div>
 							<Badge variant="outline" className="text-xs">
-								JPEG, PNG up to 10MB
+								Max {formatFileSize(uploadConfig.maxFileSize)} • Up to {uploadConfig.maxFiles} files
 							</Badge>
 						</div>
 					</div>
@@ -179,10 +199,6 @@ export default function MediaUploaderBox({
 				</div>
 
 				<DialogFooter className="flex-shrink-0">
-					<Button variant="outline" onClick={handleClose} disabled={uploadingCount > 0}>
-						Cancel
-					</Button>
-
 					{/* Show upload button when there are pending files and no uploads in progress */}
 					{pendingCount > 0 && uploadingCount === 0 && (
 						<Button onClick={handleUpload} className="w-full">
