@@ -24,7 +24,7 @@ export default function RootLayout({ children }: Readonly<GlobalLayoutProps>) {
 		<html lang="en" suppressHydrationWarning>
 			<body className={cn(poppins.className, "antialiased")} suppressHydrationWarning>
 				{children}
-				<Toaster richColors position="top-right" closeButton style={{ zIndex: 9999 }} />
+				<Toaster richColors position="top-right" closeButton />
 			</body>
 		</html>
 	);

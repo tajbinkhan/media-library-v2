@@ -14,8 +14,7 @@ import {
 	X
 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -412,18 +411,6 @@ export default function MediaUploadedItems({
 			</div>
 		);
 	});
-
-	// Show upload errors as toast notifications
-	const prevErrorKeys = useRef(new Set());
-	useEffect(() => {
-		const currentKeys = new Set(uploadErrors.keys());
-		for (const [key, msg] of uploadErrors.entries()) {
-			if (msg && !prevErrorKeys.current.has(key)) {
-				toast.error(msg);
-			}
-		}
-		prevErrorKeys.current = currentKeys;
-	}, [uploadErrors]);
 
 	return (
 		<div className="mx-auto w-full max-w-4xl space-y-6">

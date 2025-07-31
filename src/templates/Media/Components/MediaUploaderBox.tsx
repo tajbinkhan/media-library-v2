@@ -101,7 +101,10 @@ export default function MediaUploaderBox({
 
 	return (
 		<Dialog open={isOpen} onOpenChange={handleClose}>
-			<DialogContent className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden">
+			<DialogContent
+				className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden"
+				onInteractOutside={e => e.preventDefault()}
+			>
 				<DialogHeader className="flex-shrink-0">
 					<DialogTitle className="flex items-center space-x-2">
 						<Upload className="h-5 w-5" />
@@ -180,23 +183,32 @@ export default function MediaUploaderBox({
 						Cancel
 					</Button>
 
-					{/* Only show upload button if there are pending files AND no uploads in progress */}
+					{/* Show upload button when there are pending files and no uploads in progress */}
 					{pendingCount > 0 && uploadingCount === 0 && (
-						<Button onClick={handleUpload}>
+						<Button onClick={handleUpload} className="w-full">
 							Upload {pendingCount} {pendingCount === 1 ? "File" : "Files"}
 						</Button>
 					)}
 
 					{/* Show uploading status when files are being uploaded */}
 					{uploadingCount > 0 && (
-						<Button disabled>
-							<Loader2 className="animate-spin" /> Uploading {uploadingCount} Files...
+						<Button disabled className="w-full">
+							<Loader2 className="mr-2 animate-spin" /> Uploading...
 						</Button>
 					)}
 
 					{/* Show done button when all uploads are complete */}
 					{completedCount > 0 && pendingCount === 0 && uploadingCount === 0 && (
-						<Button onClick={handleClose}>Done ({completedCount} uploaded)</Button>
+						<Button onClick={handleClose} className="w-full">
+							Done
+						</Button>
+					)}
+
+					{/* Show disabled upload button when no files are selected to maintain layout */}
+					{acceptedFiles.length === 0 && (
+						<Button disabled className="w-full">
+							Upload Files
+						</Button>
 					)}
 				</DialogFooter>
 			</DialogContent>
