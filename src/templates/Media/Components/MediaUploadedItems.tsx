@@ -22,12 +22,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
-import { useMedia } from "@/templates/Media/contexts/MediaContext";
+import { useMedia } from "@/templates/Media/Contexts/MediaContext";
 
 // Define component types locally
 interface MediaUploadedItemsProps {
-	acceptedFiles: any[];
-	rejectedFiles: any[];
+	acceptedFiles: UploadedFile[];
+	rejectedFiles: RejectedFile[];
 	onRemoveAcceptedFile: (index: number) => void;
 	onRemoveRejectedFile: (index: number) => void;
 	onClearAll: () => void;
@@ -380,23 +380,25 @@ export default function MediaUploadedItems({
 								<X className="h-4 w-4" />
 							</Button>
 						)}
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={() =>
-								isAccepted
-									? onRemoveAcceptedFile(originalIndex)
-									: onRemoveRejectedFile(originalIndex)
-							}
-							className={`h-8 w-8 p-0 ${
-								isAccepted
-									? "text-green-600 hover:bg-green-100 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/50"
-									: "text-red-600 hover:bg-red-100 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/50"
-							}`}
-							title="Remove file"
-						>
-							<Trash2 className="h-4 w-4" />
-						</Button>
+						{uploadStatus !== "uploading" && (
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={() =>
+									isAccepted
+										? onRemoveAcceptedFile(originalIndex)
+										: onRemoveRejectedFile(originalIndex)
+								}
+								className={`h-8 w-8 p-0 ${
+									isAccepted
+										? "text-green-600 hover:bg-green-100 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-900/50"
+										: "text-red-600 hover:bg-red-100 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/50"
+								}`}
+								title="Remove file"
+							>
+								<Trash2 className="h-4 w-4" />
+							</Button>
+						)}
 					</div>
 				</div>
 

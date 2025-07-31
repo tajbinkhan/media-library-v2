@@ -108,6 +108,9 @@ const defaultUploadConfig: UploadConfig = {
 	acceptedFileTypes: {
 		"image/jpeg": [],
 		"image/png": [],
+		"image/gif": [],
+		"image/webp": [],
+		"image/svg+xml": [],
 		"application/pdf": []
 	},
 	multiple: true,
@@ -257,31 +260,11 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 
 	const addAcceptedFiles = (files: File[]): void => {
 		const newAcceptedFiles: UploadedFile[] = files.map(file => {
-			// Create a new object with preserved file properties
-			const uploadedFile: UploadedFile = {
-				// Explicitly copy all File properties
-				name: file.name,
-				size: file.size,
-				type: file.type,
-				lastModified: file.lastModified,
-				webkitRelativePath: (file as any).webkitRelativePath || "",
-
-				// File methods - bind to original file
-				stream: file.stream.bind(file),
-				text: file.text.bind(file),
-				arrayBuffer: file.arrayBuffer.bind(file),
-				slice: file.slice.bind(file),
-
-				// Our custom properties
-				id: `${file.name || "unnamed"}-${Date.now()}-${Math.random()}`,
-				status: "pending",
-				progress: 0
-			} as UploadedFile;
-
-			// Set the prototype to File prototype so it behaves like a File
-			Object.setPrototypeOf(uploadedFile, File.prototype);
-
-			return uploadedFile;
+			// Attach custom properties directly to the original File object
+			(file as UploadedFile).id = `${file.name || "unnamed"}-${Date.now()}-${Math.random()}`;
+			(file as UploadedFile).status = "pending";
+			(file as UploadedFile).progress = 0;
+			return file as UploadedFile;
 		});
 
 		setAcceptedFiles(prev => [...prev, ...newAcceptedFiles]);
@@ -333,16 +316,6 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 			return;
 		}
 
-		// Validate file properties
-		if (!file.name || typeof file.name !== "string") {
-			console.error("Invalid file object for upload - missing or invalid name:", file);
-			return;
-		}
-
-		if (file.size === undefined || file.size === null) {
-			console.warn("File size is undefined, but proceeding with upload:", file.name);
-		}
-
 		try {
 			// Create cancel token
 			const cancelTokenSource = axios.CancelToken.source();
@@ -352,7 +325,6 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 			setAcceptedFiles(prev =>
 				prev.map(f => {
 					if (f.id === file.id) {
-						// Preserve the file object and just update our custom properties
 						const updatedFile = f;
 						updatedFile.status = "uploading";
 						updatedFile.progress = 0;
@@ -365,7 +337,9 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 			// Add to active uploads
 			setActiveUploads(prev => new Set(prev).add(file.id!));
 
-			// Create form data - use the original file object for the actual upload
+			console.log(`Starting upload for: ${file.name}`);
+
+			// Create form data
 			const formData = new FormData();
 			formData.append("file", file);
 			formData.append("fileName", file.name);
@@ -382,7 +356,6 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 						setAcceptedFiles(prev =>
 							prev.map(f => {
 								if (f.id === file.id) {
-									// Preserve the file object and just update progress
 									const updatedFile = f;
 									updatedFile.progress = progress;
 									return updatedFile;
@@ -394,45 +367,15 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 				}
 			});
 
-			// Upload successful
-			setAcceptedFiles(prev =>
-				prev.map(f => {
-					if (f.id === file.id) {
-						// Preserve the file object and update status
-						const updatedFile = f;
-						updatedFile.status = "completed";
-						updatedFile.progress = 100;
-						updatedFile.uploadedUrl = response.data.url;
-						updatedFile.serverId = response.data.id;
-						return updatedFile;
-					}
-					return f;
-				})
-			);
+			// Upload successful - Remove the file from acceptedFiles immediately
+			setAcceptedFiles(prev => prev.filter(f => f.id !== file.id));
 
-			// Remove from active uploads
-			setActiveUploads(prev => {
-				const newSet = new Set(prev);
-				newSet.delete(file.id!);
-				return newSet;
-			});
+			console.log(`Upload completed and removed from list: ${file.name}`);
 
-			// Remove any existing error
-			setUploadErrors(prev => {
-				const newMap = new Map(prev);
-				newMap.delete(file.id!);
-				return newMap;
-			});
+			// Optionally store completed file info if you need it later
+			// You could add it to a separate completedFiles state if needed
 		} catch (error) {
-			// Remove from active uploads
-			setActiveUploads(prev => {
-				const newSet = new Set(prev);
-				newSet.delete(file.id!);
-				return newSet;
-			});
-
 			if (axios.isCancel(error)) {
-				// Upload was cancelled
 				setAcceptedFiles(prev =>
 					prev.map(f => {
 						if (f.id === file.id) {
@@ -443,8 +386,8 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 						return f;
 					})
 				);
+				console.log(`Upload cancelled for: ${file.name}`);
 			} else {
-				// Upload failed
 				const errorMessage = axios.isAxiosError(error)
 					? error.response?.data?.message || error.message
 					: "Upload failed";
@@ -461,85 +404,44 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 				);
 
 				setUploadErrors(prev => new Map(prev).set(file.id!, errorMessage));
+				console.error(`Upload failed for: ${file.name}`, errorMessage);
+			}
+		} finally {
+			// Remove from active uploads
+			setActiveUploads(prev => {
+				const newSet = new Set(prev);
+				newSet.delete(file.id!);
+				return newSet;
+			});
+
+			// Remove from upload queue
+			setUploadQueue(prev => prev.filter(f => f.id !== file.id));
+
+			// Remove any existing error for successful uploads
+			if (!Error || axios.isCancel(Error)) {
+				setUploadErrors(prev => {
+					const newMap = new Map(prev);
+					newMap.delete(file.id!);
+					return newMap;
+				});
 			}
 		}
 	};
 
-	const processUploadQueue = async (): Promise<void> => {
-		const pendingFiles = uploadQueue.filter(
-			file => file.status === "pending" && !activeUploads.has(file.id!)
-		);
-
-		const availableSlots = uploadConfig.maxConcurrentUploads - activeUploads.size;
-		const filesToUpload = pendingFiles.slice(0, availableSlots);
-
-		// Upload files concurrently
-		const uploadPromises = filesToUpload.map(file => uploadFile(file));
-		await Promise.allSettled(uploadPromises);
-
-		// Remove uploaded files from queue
-		setUploadQueue(prev =>
-			prev.filter(file => !filesToUpload.some(uploaded => uploaded.id === file.id))
-		);
-
-		// Continue processing if there are more files and available slots
-		const remainingPending = uploadQueue.filter(
-			file => file.status === "pending" && !filesToUpload.some(uploaded => uploaded.id === file.id)
-		);
-
-		if (remainingPending.length > 0 && activeUploads.size < uploadConfig.maxConcurrentUploads) {
-			// Small delay to prevent overwhelming the server
-			setTimeout(() => processUploadQueue(), 100);
-		}
+	// Simplified queue processing using useEffect
+	const processUploadQueue = () => {
+		// This will be handled by the useEffect hook
 	};
 
 	const uploadFiles = async (files: UploadedFile[]): Promise<void> => {
-		// Add files to queue if not already there
-		const newFiles = files.filter(
+		// Simply add all files to the queue - useEffect will handle processing
+		const filesToAdd = files.filter(
 			file => !uploadQueue.some(queuedFile => queuedFile.id === file.id)
 		);
 
-		if (newFiles.length > 0) {
-			setUploadQueue(prev => {
-				const updatedQueue = [...prev, ...newFiles];
-				// Process the queue after state update using the updated queue
-				setTimeout(() => processUploadQueueWithFiles(updatedQueue), 0);
-				return updatedQueue;
-			});
-		} else {
-			// If no new files, process existing queue
-			setTimeout(() => processUploadQueue(), 0);
-		}
-	};
-
-	// Helper function to process queue with specific files
-	const processUploadQueueWithFiles = async (queueFiles: UploadedFile[]): Promise<void> => {
-		const pendingFiles = queueFiles.filter(
-			file => file.status === "pending" && !activeUploads.has(file.id!)
-		);
-
-		const availableSlots = uploadConfig.maxConcurrentUploads - activeUploads.size;
-		const filesToUpload = pendingFiles.slice(0, availableSlots);
-
-		if (filesToUpload.length === 0) return;
-
-		// Upload files concurrently
-		const uploadPromises = filesToUpload.map(file => uploadFile(file));
-		await Promise.allSettled(uploadPromises);
-
-		// Remove uploaded files from queue
-		setUploadQueue(prev =>
-			prev.filter(file => !filesToUpload.some(uploaded => uploaded.id === file.id))
-		);
-
-		// Continue processing if there are more files and available slots
-		const remainingPending = queueFiles.filter(
-			file => file.status === "pending" && !filesToUpload.some(uploaded => uploaded.id === file.id)
-		);
-
-		if (remainingPending.length > 0 && activeUploads.size < uploadConfig.maxConcurrentUploads) {
-			// Small delay to prevent overwhelming the server
-			setTimeout(() => processUploadQueue(), 100);
+		if (filesToAdd.length > 0) {
+			console.log(`Adding ${filesToAdd.length} files to upload queue`);
+			setUploadQueue(prev => [...prev, ...filesToAdd]);
 		}
 	};
 
@@ -556,6 +458,9 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 			return newSet;
 		});
 
+		// Remove from upload queue
+		setUploadQueue(prev => prev.filter(f => f.id !== fileId));
+
 		// Update file status
 		setAcceptedFiles(prev =>
 			prev.map(f => {
@@ -567,14 +472,9 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 				return f;
 			})
 		);
-	};
 
-	const cancelAllUploads = (): void => {
-		acceptedFiles.forEach(file => {
-			if (file.id && activeUploads.has(file.id)) {
-				cancelUpload(file.id);
-			}
-		});
+		// Continue processing queue after cancellation
+		setTimeout(() => processUploadQueue(), 100);
 	};
 
 	const retryUpload = (fileId: string): void => {
@@ -593,7 +493,7 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 				})
 			);
 
-			// Add back to queue
+			// Add back to queue if not already there
 			setUploadQueue(prev => {
 				if (!prev.some(queuedFile => queuedFile.id === fileId)) {
 					return [...prev, file];
@@ -609,8 +509,41 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 			});
 
 			// Process queue
-			processUploadQueue();
+			setTimeout(() => processUploadQueue(), 100);
 		}
+	};
+
+	const cancelAllUploads = (): void => {
+		// Cancel all files that are currently uploading
+		acceptedFiles.forEach(file => {
+			if (file.id && activeUploads.has(file.id)) {
+				const cancelTokenSource = file.cancelTokenSource;
+				if (cancelTokenSource) {
+					cancelTokenSource.cancel("All uploads cancelled by user");
+				}
+			}
+		});
+
+		// Clear all active uploads
+		setActiveUploads(new Set());
+
+		// Clear the upload queue
+		setUploadQueue([]);
+
+		// Update all uploading files to cancelled status
+		setAcceptedFiles(prev =>
+			prev.map(f => {
+				if (f.status === "uploading" || f.status === "pending") {
+					const updatedFile = f;
+					updatedFile.status = "cancelled";
+					return updatedFile;
+				}
+				return f;
+			})
+		);
+
+		// Clear any upload errors
+		setUploadErrors(new Map());
 	};
 
 	// ========================================================================
@@ -761,6 +694,37 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 			}
 		}
 	}, [activeUploads.size, uploadQueue.length, acceptedFiles, uploadComplete]);
+
+	// Process upload queue whenever activeUploads or uploadQueue changes
+	useEffect(() => {
+		const processQueue = () => {
+			// Only process if we have queue and available slots
+			if (uploadQueue.length === 0 || activeUploads.size >= uploadConfig.maxConcurrentUploads) {
+				return;
+			}
+
+			const pendingFiles = uploadQueue.filter(file => file.status === "pending");
+			const availableSlots = uploadConfig.maxConcurrentUploads - activeUploads.size;
+			const filesToUpload = pendingFiles.slice(0, availableSlots);
+
+			if (filesToUpload.length > 0) {
+				console.log(
+					`Processing queue: Starting ${filesToUpload.length} uploads. Active: ${activeUploads.size}/${uploadConfig.maxConcurrentUploads}`
+				);
+
+				// Start uploads
+				filesToUpload.forEach(file => {
+					uploadFile(file);
+				});
+			}
+		};
+
+		// Process queue whenever activeUploads or uploadQueue changes
+		const timeoutId = setTimeout(processQueue, 50);
+
+		return () => clearTimeout(timeoutId);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [activeUploads.size, uploadQueue.length, uploadConfig.maxConcurrentUploads]);
 
 	// ========================================================================
 	// Context Value

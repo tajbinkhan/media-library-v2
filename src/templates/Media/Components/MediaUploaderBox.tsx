@@ -1,6 +1,6 @@
 "use client";
 
-import { Upload } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 import { useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 
 import MediaUploadedItems from "./MediaUploadedItems";
-import { useMedia } from "@/templates/Media/contexts/MediaContext";
+import { useMedia } from "@/templates/Media/Contexts/MediaContext";
 
 interface MediaUploaderBoxProps {
 	isOpen: boolean;
@@ -95,7 +95,6 @@ export default function MediaUploaderBox({
 		}
 	};
 
-	const acceptedCount = acceptedFiles.length;
 	const pendingCount = acceptedFiles.filter(file => file.status === "pending").length;
 	const uploadingCount = acceptedFiles.filter(file => file.status === "uploading").length;
 	const completedCount = acceptedFiles.filter(file => file.status === "completed").length;
@@ -157,7 +156,7 @@ export default function MediaUploaderBox({
 								</p>
 							</div>
 							<Badge variant="outline" className="text-xs">
-								JPEG, PNG up to 10MB (Max 20 files)
+								JPEG, PNG up to 10MB
 							</Badge>
 						</div>
 					</div>
@@ -177,19 +176,25 @@ export default function MediaUploaderBox({
 				</div>
 
 				<DialogFooter className="flex-shrink-0">
-					<Button variant="outline" onClick={handleClose}>
+					<Button variant="outline" onClick={handleClose} disabled={uploadingCount > 0}>
 						Cancel
 					</Button>
-					{pendingCount > 0 && (
+
+					{/* Only show upload button if there are pending files AND no uploads in progress */}
+					{pendingCount > 0 && uploadingCount === 0 && (
 						<Button onClick={handleUpload}>
 							Upload {pendingCount} {pendingCount === 1 ? "File" : "Files"}
 						</Button>
 					)}
+
+					{/* Show uploading status when files are being uploaded */}
 					{uploadingCount > 0 && (
 						<Button disabled>
-							Uploading {uploadingCount} {uploadingCount === 1 ? "File" : "Files"}...
+							<Loader2 className="animate-spin" /> Uploading {uploadingCount} Files...
 						</Button>
 					)}
+
+					{/* Show done button when all uploads are complete */}
 					{completedCount > 0 && pendingCount === 0 && uploadingCount === 0 && (
 						<Button onClick={handleClose}>Done ({completedCount} uploaded)</Button>
 					)}

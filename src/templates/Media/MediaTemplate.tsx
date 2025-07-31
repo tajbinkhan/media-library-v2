@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import MediaUploaderBox from "@/templates/Media/Components/MediaUploaderBox";
-import { useMedia } from "@/templates/Media/contexts/MediaContext";
+import { useMedia } from "@/templates/Media/Contexts/MediaContext";
 
 export default function MediaTemplate() {
 	const { isUploaderOpen, openUploader, closeUploader } = useMedia();
