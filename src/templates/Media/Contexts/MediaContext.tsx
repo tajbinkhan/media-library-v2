@@ -2,7 +2,11 @@
 
 import axios, { AxiosProgressEvent, CancelTokenSource } from "axios";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
+import axiosApi from "@/lib/axios-config";
+
+import { apiRoute } from "@/routes/routes";
 import {
 	ACCEPTED_FILE_TYPES,
 	MAX_CONCURRENT_UPLOADS,
@@ -114,7 +118,7 @@ const defaultUploadConfig: UploadConfig = {
 	maxConcurrentUploads: MAX_CONCURRENT_UPLOADS,
 	acceptedFileTypes: ACCEPTED_FILE_TYPES,
 	multiple: true,
-	uploadUrl: "http://localhost:8080/media/upload"
+	uploadUrl: apiRoute.mediaUpload
 };
 
 const defaultContextValue: MediaContextType = {
@@ -339,7 +343,7 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 			formData.append("fileName", file.name);
 
 			// Upload with progress tracking
-			const response = await axios.post(uploadConfig.uploadUrl, formData, {
+			const response = await axiosApi.post(uploadConfig.uploadUrl, formData, {
 				headers: {
 					"Content-Type": "multipart/form-data"
 				},
@@ -361,11 +365,20 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 				}
 			});
 
-			// Upload successful - Remove the file from acceptedFiles immediately
-			setAcceptedFiles(prev => prev.filter(f => f.id !== file.id));
-
-			// Optionally store completed file info if you need it later
-			// You could add it to a separate completedFiles state if needed
+			// Upload successful - Update status to completed but keep in list
+			setAcceptedFiles(prev =>
+				prev.map(f => {
+					if (f.id === file.id) {
+						const updatedFile = f;
+						updatedFile.status = "completed";
+						updatedFile.progress = 100;
+						updatedFile.uploadedUrl = response.data?.url || response.data?.uploadedUrl;
+						updatedFile.serverId = response.data?.id || response.data?.serverId;
+						return updatedFile;
+					}
+					return f;
+				})
+			);
 		} catch (error) {
 			if (axios.isCancel(error)) {
 				setAcceptedFiles(prev =>
@@ -657,7 +670,7 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 	// Effects
 	// ========================================================================
 
-	// Monitor upload completion
+	// Monitor upload completion and remove only successful files
 	useEffect(() => {
 		// Check if all uploads are complete when activeUploads or acceptedFiles change
 		if (activeUploads.size === 0 && uploadQueue.length === 0) {
@@ -673,11 +686,18 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 				if (!uploadComplete && (successful > 0 || failed > 0)) {
 					setUploadComplete({ successful, failed });
 
-					// Remove uploaded files from the list after a short delay
+					// Show toast message
+					const successMessage = `Upload complete! ${successful} file${successful !== 1 ? "s" : ""} uploaded successfully${failed > 0 ? `, ${failed} failed` : ""}.`;
+
+					if (failed > 0) {
+						toast.warning(successMessage);
+					} else {
+						toast.success(successMessage);
+					}
+
+					// Remove only successfully uploaded files after a short delay
 					setTimeout(() => {
-						setAcceptedFiles(prev =>
-							prev.filter(file => file.status !== "completed" && file.status !== "failed")
-						);
+						setAcceptedFiles(prev => prev.filter(file => file.status !== "completed"));
 					}, 2000); // Give user time to see the success message
 				}
 			}

@@ -2,12 +2,10 @@
 
 import { ACCEPTED_FILE_TYPES, MIME_TO_EXTENSION } from "../Constants/Media.contant";
 import { Loader2, Upload } from "lucide-react";
-import { useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 
 import { cn } from "@/lib/utils";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,17 +48,6 @@ export default function MediaUploaderBox({
 		clearUploadComplete,
 		uploadConfig
 	} = useMedia();
-
-	// Auto-dismiss success message after 3 seconds
-	useEffect(() => {
-		if (uploadComplete) {
-			const timer = setTimeout(() => {
-				clearUploadComplete();
-			}, 3000);
-
-			return () => clearTimeout(timer);
-		}
-	}, [uploadComplete, clearUploadComplete]);
 
 	const { getRootProps, getInputProps, isDragActive } = useDropzone({
 		accept: uploadConfig.acceptedFileTypes,
@@ -136,17 +123,6 @@ export default function MediaUploaderBox({
 				</DialogHeader>
 
 				<div className="min-h-0 flex-1 space-y-6 overflow-hidden">
-					{/* Success Message */}
-					{uploadComplete && (
-						<Alert className="border-green-200 bg-green-50 text-green-800">
-							<AlertDescription>
-								Upload complete! {uploadComplete.successful} file
-								{uploadComplete.successful !== 1 ? "s" : ""} uploaded successfully
-								{uploadComplete.failed > 0 && `, ${uploadComplete.failed} failed`}.
-							</AlertDescription>
-						</Alert>
-					)}
-
 					{/* Upload Area */}
 					<div
 						{...getRootProps()}
