@@ -9,8 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import MediaSingleView from "./MediaSingleView";
-import { apiRoute } from "@/routes/routes";
 import useCustomSWR from "@/templates/Media/Hooks/useCustomSWR";
+import { mediaApiRoutes } from "@/templates/Media/Routes/MediaRoutes";
 
 // ============================================================================
 // Types
@@ -55,7 +55,7 @@ export default function MediaGridView({
 		error,
 		isLoading,
 		refresh
-	} = useCustomSWR<MediaListResponse>(apiRoute.media);
+	} = useCustomSWR<MediaListResponse>(mediaApiRoutes.media);
 
 	// ========================================================================
 	// Utility Functions

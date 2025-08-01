@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-import { apiRoute } from "@/routes/routes";
+import { mediaApiRoutes } from "@/templates/Media/Routes/MediaRoutes";
 import {
 	MediaUpdateSchemaType,
 	mediaUpdateSchema
@@ -65,7 +65,7 @@ export default function MediaEditModal({ item, onClose, onSave, onCancel }: Medi
 				name: `${data.name}.${item?.originalFilename.split(".").pop() || ""}`
 			};
 			await axiosApi
-				.put(apiRoute.mediaId(item?.id!), payload)
+				.put(mediaApiRoutes.mediaId(item?.id!), payload)
 				.then(() => {
 					toast.success("Media details updated successfully");
 					onSave();

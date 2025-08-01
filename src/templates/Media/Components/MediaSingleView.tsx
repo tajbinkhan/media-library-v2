@@ -20,7 +20,6 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import MediaEditModal from "./MediaEditModal";
 import MediaPreviewModal from "./MediaPreviewModal";
@@ -155,191 +154,176 @@ export default function MediaSingleView({
 
 	return (
 		<>
-			<TooltipProvider>
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<Card
-							className={`group relative transform cursor-pointer overflow-hidden border transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl dark:border-gray-700 ${
-								isSelected
-									? "border-blue-200 ring-2 shadow-blue-100 ring-blue-500 dark:border-blue-600 dark:shadow-blue-900/50"
-									: "border-gray-200 bg-white shadow-sm hover:border-gray-300 dark:bg-gray-900 dark:hover:border-gray-600"
-							}`}
-							onClick={handleItemClick}
-						>
-							<CardContent className="p-0">
-								{/* Media Preview */}
-								<div className="relative aspect-square bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
-									{isImage && item.secureUrl ? (
-										<>
-											<Image
-												src={item.secureUrl}
-												alt={item.altText || item.originalFilename || "Media file"}
-												fill
-												className="object-cover transition-all duration-500 group-hover:scale-105"
-												sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16.67vw"
-												unoptimized={true}
-											/>
-											<div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-										</>
+			<Card
+				className={`group relative transform cursor-pointer overflow-hidden border py-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl dark:border-gray-700 ${
+					isSelected
+						? "border-blue-200 ring-2 shadow-blue-100 ring-blue-500 dark:border-blue-600 dark:shadow-blue-900/50"
+						: "border-gray-200 bg-white shadow-sm hover:border-gray-300 dark:bg-gray-900 dark:hover:border-gray-600"
+				}`}
+				onClick={handleItemClick}
+			>
+				<CardContent className="p-0">
+					{/* Media Preview */}
+					<div className="relative aspect-square bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+						{isImage && item.secureUrl ? (
+							<>
+								<Image
+									src={item.secureUrl}
+									alt={item.altText || item.originalFilename || "Media file"}
+									fill
+									className="object-cover transition-all duration-500 group-hover:scale-105"
+									sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16.67vw"
+									unoptimized={true}
+								/>
+								<div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+							</>
+						) : (
+							<div className="flex h-full items-center justify-center">
+								<div className="p-6 text-center">
+									<div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-lg dark:bg-gray-800">
+										{fileIcon}
+									</div>
+									<Badge variant="secondary" className="px-2 py-1 text-xs font-medium">
+										{fileTypeLabel}
+									</Badge>
+								</div>
+							</div>
+						)}
+
+						{/* Quick Actions Overlay */}
+						<div className="absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-300 group-hover:opacity-100">
+							<div className="flex gap-2">
+								<Button
+									size="sm"
+									variant="secondary"
+									className="h-8 w-8 bg-white/90 p-0 hover:bg-white dark:bg-gray-900/90 dark:hover:bg-gray-900"
+									onClick={(e: React.MouseEvent) => {
+										e.stopPropagation();
+										handleItemClick();
+									}}
+								>
+									<Eye className="h-4 w-4" />
+								</Button>
+								<Button
+									size="sm"
+									variant="secondary"
+									className="h-8 w-8 bg-white/90 p-0 hover:bg-white dark:bg-gray-900/90 dark:hover:bg-gray-900"
+									onClick={(e: React.MouseEvent) => {
+										e.stopPropagation();
+										handleCopyToClipboard(item.secureUrl);
+									}}
+								>
+									{copySuccess === `item-${item.id}` ? (
+										<Check className="h-4 w-4 text-green-500" />
 									) : (
-										<div className="flex h-full items-center justify-center">
-											<div className="p-6 text-center">
-												<div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-lg dark:bg-gray-800">
-													{fileIcon}
-												</div>
-												<Badge variant="secondary" className="px-2 py-1 text-xs font-medium">
-													{fileTypeLabel}
-												</Badge>
-											</div>
-										</div>
+										<Copy className="h-4 w-4" />
 									)}
-
-									{/* Quick Actions Overlay */}
-									<div className="absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-300 group-hover:opacity-100">
-										<div className="flex gap-2">
-											<Button
-												size="sm"
-												variant="secondary"
-												className="h-8 w-8 bg-white/90 p-0 hover:bg-white dark:bg-gray-900/90 dark:hover:bg-gray-900"
-												onClick={(e: React.MouseEvent) => {
-													e.stopPropagation();
-													handleItemClick();
-												}}
-											>
-												<Eye className="h-4 w-4" />
-											</Button>
-											<Button
-												size="sm"
-												variant="secondary"
-												className="h-8 w-8 bg-white/90 p-0 hover:bg-white dark:bg-gray-900/90 dark:hover:bg-gray-900"
-												onClick={(e: React.MouseEvent) => {
-													e.stopPropagation();
-													handleCopyToClipboard(item.secureUrl);
-												}}
-											>
-												{copySuccess === `item-${item.id}` ? (
-													<Check className="h-4 w-4 text-green-500" />
-												) : (
-													<Copy className="h-4 w-4" />
-												)}
-											</Button>
-											<Button
-												size="sm"
-												variant="secondary"
-												className="h-8 w-8 bg-white/90 p-0 hover:bg-white dark:bg-gray-900/90 dark:hover:bg-gray-900"
-												onClick={(e: React.MouseEvent) => {
-													e.stopPropagation();
-													handleDownloadFile(item.secureUrl, item.originalFilename);
-												}}
-											>
-												<Download className="h-4 w-4" />
-											</Button>
-										</div>
-									</div>
-
-									{/* Selection indicator */}
-									{isSelected && (
-										<div className="absolute top-3 left-3">
-											<div className="rounded-full bg-blue-500 p-1 text-white shadow-lg">
-												<Check className="h-4 w-4" />
-											</div>
-										</div>
-									)}
-
-									{/* Delete Button */}
-									<div className="absolute top-3 right-3 opacity-0 transition-all duration-200 group-hover:opacity-100">
-										<Button
-											variant="destructive"
-											size="sm"
-											className="h-8 w-8 p-0 shadow-lg"
-											onClick={(e: React.MouseEvent) => {
-												e.stopPropagation();
-												onItemDelete(item);
-											}}
-											title="Delete file"
-										>
-											<Trash2 className="h-4 w-4" />
-										</Button>
-									</div>
-
-									{/* File type badge for non-images */}
-									{!isImage && (
-										<div className="absolute bottom-3 left-3">
-											<Badge
-												variant="secondary"
-												className="bg-white/90 text-xs font-medium dark:bg-gray-900/90"
-											>
-												{fileTypeLabel}
-											</Badge>
-										</div>
-									)}
-								</div>
-
-								{/* Enhanced File Info */}
-								<div className="bg-white p-4 dark:bg-gray-900">
-									<div className="mb-2 flex items-start justify-between">
-										<div className="min-w-0 flex-1">
-											<h4
-												className="truncate text-sm font-semibold text-gray-900 dark:text-gray-100"
-												title={item.originalFilename || "Unknown file"}
-											>
-												{item.originalFilename || "Unknown file"}
-											</h4>
-											{item.altText && (
-												<p
-													className="truncate text-xs text-gray-500 dark:text-gray-400"
-													title={item.altText}
-												>
-													{item.altText}
-												</p>
-											)}
-										</div>
-										{/* Edit Button */}
-										<Button
-											variant="ghost"
-											size="sm"
-											className="h-6 w-6 flex-shrink-0 p-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-											onClick={(e: React.MouseEvent) => {
-												e.stopPropagation();
-												handleEditStart();
-											}}
-											title="Edit details"
-										>
-											<Edit3 className="h-3 w-3 text-gray-400 hover:text-orange-500" />
-										</Button>
-									</div>
-
-									<div className="flex items-center justify-between text-xs">
-										<div className="flex flex-col gap-1">
-											<span className="font-medium text-gray-600 dark:text-gray-400">
-												{formatFileSize(item.fileSize)}
-											</span>
-											{item.width && item.height && (
-												<span className="text-gray-500 dark:text-gray-500">
-													{item.width} × {item.height}
-												</span>
-											)}
-										</div>
-										<span className="flex items-center text-gray-400 dark:text-gray-500">
-											<Calendar className="mr-1 h-3 w-3" />
-											{formatDate(item.createdAt)}
-										</span>
-									</div>
-								</div>
-							</CardContent>
-						</Card>
-					</TooltipTrigger>
-					<TooltipContent side="bottom" className="max-w-xs">
-						<div className="text-center">
-							<p className="font-medium">{item.originalFilename || "Unknown file"}</p>
-							<p className="mt-1 text-xs text-gray-400">
-								{formatFileSize(item.fileSize)} • {formatDate(item.createdAt)}
-							</p>
-							{item.altText && <p className="mt-1 text-xs text-gray-300 italic">{item.altText}</p>}
+								</Button>
+								<Button
+									size="sm"
+									variant="secondary"
+									className="h-8 w-8 bg-white/90 p-0 hover:bg-white dark:bg-gray-900/90 dark:hover:bg-gray-900"
+									onClick={(e: React.MouseEvent) => {
+										e.stopPropagation();
+										handleDownloadFile(item.secureUrl, item.originalFilename);
+									}}
+								>
+									<Download className="h-4 w-4" />
+								</Button>
+							</div>
 						</div>
-					</TooltipContent>
-				</Tooltip>
-			</TooltipProvider>
+
+						{/* Selection indicator */}
+						{isSelected && (
+							<div className="absolute top-3 left-3">
+								<div className="rounded-full bg-blue-500 p-1 text-white shadow-lg">
+									<Check className="h-4 w-4" />
+								</div>
+							</div>
+						)}
+
+						{/* Delete Button */}
+						<div className="absolute top-3 right-3 opacity-0 transition-all duration-200 group-hover:opacity-100">
+							<Button
+								variant="destructive"
+								size="sm"
+								className="h-8 w-8 p-0 shadow-lg"
+								onClick={(e: React.MouseEvent) => {
+									e.stopPropagation();
+									onItemDelete(item);
+								}}
+								title="Delete file"
+							>
+								<Trash2 className="h-4 w-4" />
+							</Button>
+						</div>
+
+						{/* File type badge for non-images */}
+						{!isImage && (
+							<div className="absolute bottom-3 left-3">
+								<Badge
+									variant="secondary"
+									className="bg-white/90 text-xs font-medium dark:bg-gray-900/90"
+								>
+									{fileTypeLabel}
+								</Badge>
+							</div>
+						)}
+					</div>
+
+					{/* Enhanced File Info */}
+					<div className="bg-white p-4 dark:bg-gray-900">
+						<div className="mb-2 flex items-start justify-between">
+							<div className="min-w-0 flex-1">
+								<h4
+									className="truncate text-sm font-semibold text-gray-900 dark:text-gray-100"
+									title={item.originalFilename || "Unknown file"}
+								>
+									{item.originalFilename || "Unknown file"}
+								</h4>
+								{item.altText && (
+									<p
+										className="truncate text-xs text-gray-500 dark:text-gray-400"
+										title={item.altText}
+									>
+										{item.altText}
+									</p>
+								)}
+							</div>
+							{/* Edit Button */}
+							<Button
+								variant="ghost"
+								size="sm"
+								className="h-6 w-6 flex-shrink-0 p-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+								onClick={(e: React.MouseEvent) => {
+									e.stopPropagation();
+									handleEditStart();
+								}}
+								title="Edit details"
+							>
+								<Edit3 className="h-3 w-3 text-gray-400 hover:text-orange-500" />
+							</Button>
+						</div>
+
+						<div className="flex items-center justify-between text-xs">
+							<div className="flex flex-col gap-1">
+								<span className="font-medium text-gray-600 dark:text-gray-400">
+									{formatFileSize(item.fileSize)}
+								</span>
+								{item.width && item.height && (
+									<span className="text-gray-500 dark:text-gray-500">
+										{item.width} × {item.height}
+									</span>
+								)}
+							</div>
+							<span className="flex items-center text-gray-400 dark:text-gray-500">
+								<Calendar className="mr-1 h-3 w-3" />
+								{formatDate(item.createdAt)}
+							</span>
+						</div>
+					</div>
+				</CardContent>
+			</Card>
 
 			{/* Modal Components */}
 			<MediaPreviewModal item={previewItem} onClose={handleClosePreview} />

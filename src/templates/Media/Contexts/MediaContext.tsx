@@ -6,13 +6,13 @@ import { toast } from "sonner";
 
 import axiosApi from "@/lib/axios-config";
 
-import { apiRoute } from "@/routes/routes";
 import {
 	ACCEPTED_FILE_TYPES,
 	MAX_CONCURRENT_UPLOADS,
 	MAX_FILES,
 	MAX_FILE_SIZE
 } from "@/templates/Media/Constants/Media.contant";
+import { mediaApiRoutes } from "@/templates/Media/Routes/MediaRoutes";
 
 // Define types locally since .d.ts files cannot be imported
 interface UploadedFile extends File {
@@ -118,7 +118,7 @@ const defaultUploadConfig: UploadConfig = {
 	maxConcurrentUploads: MAX_CONCURRENT_UPLOADS,
 	acceptedFileTypes: ACCEPTED_FILE_TYPES,
 	multiple: true,
-	uploadUrl: apiRoute.mediaUpload
+	uploadUrl: mediaApiRoutes.mediaUpload
 };
 
 const defaultContextValue: MediaContextType = {
