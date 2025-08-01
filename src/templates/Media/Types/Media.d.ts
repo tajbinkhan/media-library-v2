@@ -3,6 +3,68 @@
 // ============================================================================
 
 /**
+ * Represents a media item from the database
+ */
+interface MediaItem {
+	id: number;
+	filename: string;
+	originalFilename: string;
+	mimeType: string;
+	fileExtension: string;
+	secureUrl: string;
+	fileSize: number;
+	width?: number;
+	height?: number;
+	duration?: number | null;
+	storageKey: string;
+	mediaType: string;
+	altText?: string | null;
+	caption?: string | null;
+	description?: string | null;
+	tags?: string | null;
+	createdAt: string;
+	updatedAt: string;
+	storageMetadata?: any;
+}
+
+/**
+ * Form data for editing media items
+ */
+interface EditForm {
+	originalFilename: string;
+	altText: string;
+	description: string;
+}
+
+/**
+ * Props for MediaSingleView component
+ */
+interface MediaSingleViewProps {
+	item: MediaItem;
+	isSelected: boolean;
+	onItemDelete: (item: MediaItem) => void;
+	refresh: () => void;
+}
+
+/**
+ * Props for MediaPreviewModal component
+ */
+interface MediaPreviewModalProps {
+	item: MediaItem | null;
+	onClose: () => void;
+}
+
+/**
+ * Props for MediaEditModal component
+ */
+interface MediaEditModalProps {
+	item: MediaItem | null;
+	onClose: () => void;
+	onSave: () => void;
+	onCancel: () => void;
+}
+
+/**
  * Represents a file that has been uploaded or selected for upload
  * Extends the native File interface with additional properties
  */
@@ -137,6 +199,18 @@ interface MediaTemplateProps {
 	callbacks?: MediaCallbacks;
 	/** UI customization options */
 	customization?: MediaCustomization;
+}
+
+/**
+ * Props for MediaGridView component
+ */
+interface MediaGridViewProps {
+	/** Callback when a media item is selected */
+	onItemSelect?: (item: MediaItem) => void;
+	/** Callback when a media item is deleted */
+	onItemDelete?: (item: MediaItem) => void;
+	/** Custom class name */
+	className?: string;
 }
 
 // ============================================================================
@@ -285,6 +359,67 @@ interface UploadEvent {
 // ============================================================================
 // API Response Types
 // ============================================================================
+
+/**
+ * Media item from the API (fetched media)
+ */
+interface MediaItem {
+	/** Unique identifier for the media item */
+	id: number;
+	/** Generated filename */
+	filename: string;
+	/** Original filename */
+	originalFilename: string;
+	/** MIME type of the file */
+	mimeType: string;
+	/** File extension */
+	fileExtension: string;
+	/** Secure URL to access the media file */
+	secureUrl: string;
+	/** File size in bytes */
+	fileSize: number;
+	/** Image width */
+	width?: number;
+	/** Image height */
+	height?: number;
+	/** Media duration (for videos/audio) */
+	duration?: number | null;
+	/** Storage key */
+	storageKey: string;
+	/** Media type */
+	mediaType: string;
+	/** Alternative text for accessibility */
+	altText?: string | null;
+	/** Caption */
+	caption?: string | null;
+	/** Description */
+	description?: string | null;
+	/** Tags */
+	tags?: string | null;
+	/** Creation timestamp */
+	createdAt: string;
+	/** Last update timestamp */
+	updatedAt: string;
+	/** Storage metadata */
+	storageMetadata?: any;
+}
+
+/**
+ * Response for media list API
+ */
+interface MediaListResponse {
+	/** Array of media items */
+	data: MediaItem[];
+	/** Pagination information */
+	pagination?: {
+		currentPage: number;
+		totalPages: number;
+		totalItems: number;
+		limit: number;
+		hasNextPage: boolean;
+		hasPrevPage: boolean;
+	};
+}
 
 /**
  * Standard API response for file upload
