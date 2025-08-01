@@ -109,7 +109,7 @@ export default function MediaUploaderBox({
 	return (
 		<Dialog open={isOpen} onOpenChange={handleClose}>
 			<DialogContent
-				className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden"
+				className="flex max-w-4xl flex-col overflow-hidden"
 				onInteractOutside={e => e.preventDefault()}
 			>
 				<DialogHeader className="flex-shrink-0">

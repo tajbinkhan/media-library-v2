@@ -1,11 +1,13 @@
 "use client";
 
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Calendar, FileImage, Grid3X3, HardDrive, Search, Trash2, Upload } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import MediaSingleView from "./MediaSingleView";
@@ -32,6 +34,7 @@ interface MediaGridViewProps {
 	onItemSelect?: (item: MediaItem) => void;
 	onItemDelete?: (item: MediaItem) => void;
 	onUpload?: () => void;
+	onRegisterRefresh?: (refreshFn: () => void) => void;
 	className?: string;
 }
 
@@ -43,11 +46,15 @@ export default function MediaGridView({
 	onItemSelect,
 	onItemDelete,
 	onUpload,
+	onRegisterRefresh,
 	className = ""
 }: MediaGridViewProps) {
 	const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
 	const [searchQuery, setSearchQuery] = useState("");
 	const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+	// Ref for virtualization container
+	const parentRef = useRef<HTMLDivElement>(null);
 
 	// Fetch media list using SWR
 	const {
@@ -56,6 +63,34 @@ export default function MediaGridView({
 		isLoading,
 		refresh
 	} = useCustomSWR<MediaListResponse>(mediaApiRoutes.media);
+
+	// Register refresh function with parent component
+	const hasRegistered = useRef(false);
+	const refreshFnRef = useRef(refresh);
+
+	// Keep the ref updated with the latest refresh function
+	refreshFnRef.current = refresh;
+
+	// Register the refresh function only once
+	useEffect(() => {
+		if (onRegisterRefresh && !hasRegistered.current) {
+			console.log("📝 Registering media grid refresh function");
+			onRegisterRefresh(() => {
+				console.log("🔄 Executing refresh from context");
+				if (refreshFnRef.current) {
+					refreshFnRef.current();
+				}
+			});
+			hasRegistered.current = true;
+		}
+
+		// Cleanup on unmount or when onRegisterRefresh changes
+		return () => {
+			if (hasRegistered.current) {
+				hasRegistered.current = false;
+			}
+		};
+	}, [onRegisterRefresh]); // Remove refresh from dependencies
 
 	// ========================================================================
 	// Utility Functions
@@ -79,16 +114,76 @@ export default function MediaGridView({
 	};
 
 	// ========================================================================
+	// Data Processing
+	// ========================================================================
+
+	const mediaItems = useMemo(() => response?.data || [], [response?.data]);
+	const filteredItems = useMemo(() => {
+		return mediaItems.filter(
+			item =>
+				!searchQuery || item.originalFilename?.toLowerCase().includes(searchQuery.toLowerCase())
+		);
+	}, [mediaItems, searchQuery]);
+
+	// Calculate columns based on screen size
+	const getColumnsCount = useCallback(() => {
+		if (typeof window === "undefined") return 6;
+		const width = window.innerWidth;
+		if (width < 640) return 2; // sm
+		if (width < 768) return 3; // md
+		if (width < 1024) return 4; // lg
+		if (width < 1280) return 5; // xl
+		return 6; // 2xl and above
+	}, []);
+
+	const [columnsCount, setColumnsCount] = useState(6);
+
+	// Update columns on window resize
+	useEffect(() => {
+		const updateColumns = () => {
+			setColumnsCount(getColumnsCount());
+		};
+
+		updateColumns(); // Initial setup
+		window.addEventListener("resize", updateColumns);
+		return () => window.removeEventListener("resize", updateColumns);
+	}, [getColumnsCount]);
+
+	// Group items into rows for virtualization
+	const virtualRows = useMemo(() => {
+		const rows = [];
+		for (let i = 0; i < filteredItems.length; i += columnsCount) {
+			rows.push(filteredItems.slice(i, i + columnsCount));
+		}
+		return rows;
+	}, [filteredItems, columnsCount]);
+
+	// Use virtualization only for large lists
+	const shouldUseVirtualization = filteredItems.length > 30;
+
+	// Virtualization setup (only for large lists)
+	const rowVirtualizer = useVirtualizer({
+		count: virtualRows.length,
+		getScrollElement: () => parentRef.current,
+		estimateSize: () => 280, // Better estimated row height
+		overscan: 3,
+		enabled: shouldUseVirtualization
+	});
+
+	// ========================================================================
 	// Event Handlers
 	// ========================================================================
 
-	const handleItemDelete = (item: MediaItem) => {
-		if (onItemDelete) {
-			onItemDelete(item);
-		}
-	};
+	const handleItemDelete = useCallback(
+		(item: MediaItem) => {
+			if (onItemDelete) {
+				onItemDelete(item);
+			}
+		},
+		[onItemDelete]
+	);
 
-	const toggleItemSelection = (itemId: number) => {
+	const toggleItemSelection = useCallback((itemId: number) => {
 		setSelectedItems(prev => {
 			const newSelection = new Set(prev);
 			if (newSelection.has(itemId)) {
@@ -98,7 +193,7 @@ export default function MediaGridView({
 			}
 			return newSelection;
 		});
-	};
+	}, []);
 
 	// ========================================================================
 	// Render Functions
@@ -173,28 +268,9 @@ export default function MediaGridView({
 		</div>
 	);
 
-	const renderMediaItem = (item: MediaItem) => {
-		const isSelected = selectedItems.has(item.id);
-
-		return (
-			<MediaSingleView
-				key={item.id}
-				item={item}
-				isSelected={isSelected}
-				onItemDelete={handleItemDelete}
-				refresh={refresh}
-			/>
-		);
-	};
-
 	// ========================================================================
 	// Main Render
 	// ========================================================================
-
-	const mediaItems = response?.data || [];
-	const filteredItems = mediaItems.filter(
-		item => !searchQuery || item.originalFilename?.toLowerCase().includes(searchQuery.toLowerCase())
-	);
 
 	return (
 		<div className={`w-full ${className}`}>
@@ -255,7 +331,7 @@ export default function MediaGridView({
 						)}
 
 						{/* Refresh Button */}
-						{mediaItems.length > 0 && (
+						{filteredItems.length > 0 && (
 							<Button
 								onClick={refresh}
 								variant="outline"
@@ -271,19 +347,19 @@ export default function MediaGridView({
 				</div>
 
 				{/* Stats Bar */}
-				{mediaItems.length > 0 && (
+				{filteredItems.length > 0 && (
 					<div className="flex items-center gap-4 rounded-lg bg-gray-50 px-4 py-2 text-sm text-gray-500 dark:bg-gray-900/50 dark:text-gray-400">
 						<span className="flex items-center">
 							<HardDrive className="mr-1 h-4 w-4" />
-							{mediaItems.length} files
+							{filteredItems.length} files
 						</span>
 						<span className="flex items-center">
 							<FileImage className="mr-1 h-4 w-4 text-blue-500" />
-							{mediaItems.filter(item => isImageFile(item.mimeType)).length} images
+							{filteredItems.filter(item => isImageFile(item.mimeType)).length} images
 						</span>
 						<span className="flex items-center">
 							<Calendar className="mr-1 h-4 w-4" />
-							Updated {formatDate(mediaItems[0]?.updatedAt)}
+							Updated {formatDate(filteredItems[0]?.updatedAt)}
 						</span>
 					</div>
 				)}
@@ -315,9 +391,74 @@ export default function MediaGridView({
 					renderEmptyState()
 				)
 			) : (
-				<div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-					{filteredItems.map(renderMediaItem)}
-				</div>
+				<ScrollArea
+					ref={parentRef}
+					className="w-full"
+					style={{
+						height: `calc(100vh - 200px)`,
+						maxHeight: "800px",
+						minHeight: "400px"
+					}}
+				>
+					<div className="pr-4">
+						{shouldUseVirtualization ? (
+							// Virtualized rendering for large lists
+							<div
+								style={{
+									height: `${rowVirtualizer.getTotalSize()}px`,
+									width: "100%",
+									position: "relative"
+								}}
+							>
+								{rowVirtualizer.getVirtualItems().map(virtualRow => (
+									<div
+										key={virtualRow.index}
+										style={{
+											position: "absolute",
+											top: 0,
+											left: 0,
+											width: "100%",
+											height: `${virtualRow.size}px`,
+											transform: `translateY(${virtualRow.start}px)`
+										}}
+									>
+										<div className="grid grid-cols-2 gap-6 p-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+											{virtualRows[virtualRow.index]?.map(item => {
+												const isSelected = selectedItems.has(item.id);
+												return (
+													<MediaSingleView
+														key={item.id}
+														item={item}
+														isSelected={isSelected}
+														onItemDelete={handleItemDelete}
+														refresh={refresh}
+													/>
+												);
+											})}
+										</div>
+									</div>
+								))}
+							</div>
+						) : (
+							// Simple rendering for smaller lists
+							<div className="grid grid-cols-2 gap-6 p-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+								{filteredItems.map(item => {
+									const isSelected = selectedItems.has(item.id);
+									return (
+										<MediaSingleView
+											key={item.id}
+											item={item}
+											isSelected={isSelected}
+											onItemDelete={handleItemDelete}
+											refresh={refresh}
+										/>
+									);
+								})}
+							</div>
+						)}
+					</div>
+					<ScrollBar orientation="vertical" />
+				</ScrollArea>
 			)}
 
 			{/* Pagination */}

@@ -1,6 +1,16 @@
 "use client";
 
-import { Check, Copy, Download, File, FileImage, FileText, FileVideo, Music } from "lucide-react";
+import {
+	Check,
+	Copy,
+	Download,
+	File,
+	FileImage,
+	FileText,
+	FileVideo,
+	Music,
+	Trash2
+} from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -14,16 +24,19 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
+import MediaDeleteAlert from "./MediaDeleteAlert";
+
 // ============================================================================
 // Component
 // ============================================================================
 
-export default function MediaPreviewModal({ item, onClose }: MediaPreviewModalProps) {
+export default function MediaPreviewModal({ item, onClose, refresh }: MediaPreviewModalProps) {
 	// ========================================================================
 	// State Management
 	// ========================================================================
 
 	const [copySuccess, setCopySuccess] = useState<string | null>(null);
+	const [deleteItem, setDeleteItem] = useState<MediaItem | null>(null);
 
 	// ========================================================================
 	// Event Handlers
@@ -46,6 +59,21 @@ export default function MediaPreviewModal({ item, onClose }: MediaPreviewModalPr
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
+	};
+
+	const handleDeleteStart = () => {
+		if (item) {
+			setDeleteItem(item);
+		}
+	};
+
+	const handleDeleteSuccess = () => {
+		refresh?.();
+		onClose(); // Close the preview modal after successful deletion
+	};
+
+	const handleCloseDelete = () => {
+		setDeleteItem(null);
 	};
 	// ========================================================================
 	// Utility Functions
@@ -149,6 +177,16 @@ export default function MediaPreviewModal({ item, onClose }: MediaPreviewModalPr
 					>
 						<Download className="h-4 w-4" />
 					</Button>
+					{refresh && (
+						<Button
+							variant="destructive"
+							size="sm"
+							onClick={handleDeleteStart}
+							className="flex items-center gap-2"
+						>
+							<Trash2 className="h-4 w-4" />
+						</Button>
+					)}
 				</div>
 
 				<div className="mt-4">
@@ -238,6 +276,13 @@ export default function MediaPreviewModal({ item, onClose }: MediaPreviewModalPr
 					</div>
 				</div>
 			</DialogContent>
+
+			{/* Delete Confirmation Modal */}
+			<MediaDeleteAlert
+				item={deleteItem}
+				onClose={handleCloseDelete}
+				onSuccess={handleDeleteSuccess}
+			/>
 		</Dialog>
 	);
 }

@@ -52,6 +52,7 @@ interface MediaSingleViewProps {
 interface MediaPreviewModalProps {
 	item: MediaItem | null;
 	onClose: () => void;
+	refresh?: () => void;
 }
 
 /**
@@ -62,6 +63,15 @@ interface MediaEditModalProps {
 	onClose: () => void;
 	onSave: () => void;
 	onCancel: () => void;
+}
+
+/**
+ * Props for MediaDeleteAlert component
+ */
+interface MediaDeleteAlertProps {
+	item: MediaItem | null;
+	onClose: () => void;
+	onSuccess?: () => void;
 }
 
 /**

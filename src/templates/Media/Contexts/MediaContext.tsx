@@ -1,7 +1,7 @@
 "use client";
 
 import axios, { AxiosProgressEvent, CancelTokenSource } from "axios";
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import axiosApi from "@/lib/axios-config";
@@ -104,6 +104,9 @@ interface MediaContextActions {
 
 	// Configuration
 	updateUploadConfig: (config: Partial<UploadConfig>) => void;
+
+	// Refresh callback
+	setRefreshCallback: (callback: (() => void) | null) => void;
 }
 
 type MediaContextType = MediaContextState & MediaContextActions;
@@ -153,7 +156,8 @@ const defaultContextValue: MediaContextType = {
 	formatFileSize: () => "",
 	isImageFile: () => false,
 	getFileKey: () => "",
-	updateUploadConfig: () => {}
+	updateUploadConfig: () => {},
+	setRefreshCallback: () => {}
 };
 
 // ============================================================================
@@ -192,6 +196,9 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 		...defaultUploadConfig,
 		...initialConfig
 	});
+
+	// Refresh callback for updating media list after uploads
+	const [refreshCallback, setRefreshCallback] = useState<(() => void) | null>(null);
 
 	// Ref to track object URLs for cleanup
 	const objectUrlsRef = useRef<Set<string>>(new Set());
@@ -570,6 +577,11 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 		setUploadConfig(prev => ({ ...prev, ...config }));
 	};
 
+	// Stable callback for setting refresh function
+	const handleSetRefreshCallback = useCallback((callback: (() => void) | null) => {
+		setRefreshCallback(callback);
+	}, []);
+
 	// ========================================================================
 	// Effects
 	// ========================================================================
@@ -695,6 +707,12 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 						toast.success(successMessage);
 					}
 
+					// Trigger media list refresh if there were successful uploads
+					if (successful > 0 && refreshCallback) {
+						console.log("🔄 Triggering media list refresh after successful upload");
+						refreshCallback();
+					}
+
 					// Remove only successfully uploaded files after a short delay
 					setTimeout(() => {
 						setAcceptedFiles(prev => prev.filter(file => file.status !== "completed"));
@@ -702,7 +720,7 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 				}
 			}
 		}
-	}, [activeUploads.size, uploadQueue.length, acceptedFiles, uploadComplete]);
+	}, [activeUploads.size, uploadQueue.length, acceptedFiles, uploadComplete, refreshCallback]);
 
 	// Process upload queue whenever activeUploads or uploadQueue changes
 	useEffect(() => {
@@ -767,7 +785,8 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 		isImageFile,
 		getFileKey,
 		updateUploadConfig,
-		clearUploadComplete: () => setUploadComplete(null)
+		clearUploadComplete: () => setUploadComplete(null),
+		setRefreshCallback: handleSetRefreshCallback
 	};
 
 	return <MediaContext.Provider value={contextValue}>{children}</MediaContext.Provider>;

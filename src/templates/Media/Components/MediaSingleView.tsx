@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
+import MediaDeleteAlert from "./MediaDeleteAlert";
 import MediaEditModal from "./MediaEditModal";
 import MediaPreviewModal from "./MediaPreviewModal";
 
@@ -40,6 +41,7 @@ export default function MediaSingleView({
 
 	const [previewItem, setPreviewItem] = useState<MediaItem | null>(null);
 	const [editItem, setEditItem] = useState<MediaItem | null>(null);
+	const [deleteItem, setDeleteItem] = useState<MediaItem | null>(null);
 	const [copySuccess, setCopySuccess] = useState<string | null>(null);
 	// ========================================================================
 	// Event Handlers
@@ -51,6 +53,18 @@ export default function MediaSingleView({
 
 	const handleEditStart = () => {
 		setEditItem(item);
+	};
+
+	const handleDeleteStart = () => {
+		setDeleteItem(item);
+	};
+
+	const handleDeleteSuccess = () => {
+		refresh();
+	};
+
+	const handleCloseDelete = () => {
+		setDeleteItem(null);
 	};
 
 	const handleCopyToClipboard = async (text: string) => {
@@ -250,7 +264,7 @@ export default function MediaSingleView({
 								className="h-8 w-8 p-0 shadow-lg"
 								onClick={(e: React.MouseEvent) => {
 									e.stopPropagation();
-									onItemDelete(item);
+									handleDeleteStart();
 								}}
 								title="Delete file"
 							>
@@ -326,12 +340,17 @@ export default function MediaSingleView({
 			</Card>
 
 			{/* Modal Components */}
-			<MediaPreviewModal item={previewItem} onClose={handleClosePreview} />
+			<MediaPreviewModal item={previewItem} onClose={handleClosePreview} refresh={refresh} />
 			<MediaEditModal
 				item={editItem}
 				onClose={handleCloseEdit}
 				onSave={handleEditSave}
 				onCancel={handleEditCancel}
+			/>
+			<MediaDeleteAlert
+				item={deleteItem}
+				onClose={handleCloseDelete}
+				onSuccess={handleDeleteSuccess}
 			/>
 		</>
 	);
