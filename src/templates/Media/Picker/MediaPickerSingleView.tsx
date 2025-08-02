@@ -23,15 +23,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-import MediaDeleteAlert from "./MediaDeleteAlert";
-import MediaEditModal from "./MediaEditModal";
-import MediaPreviewModal from "./MediaPreviewModal";
+import MediaDeleteAlert from "@/templates/Media/Components/MediaDeleteAlert";
+import MediaEditModal from "@/templates/Media/Components/MediaEditModal";
+import MediaPreviewModal from "@/templates/Media/Components/MediaPreviewModal";
 
 // ============================================================================
 // Component
 // ============================================================================
 
-export default function MediaSingleView({ item, refresh }: MediaSingleViewProps) {
+export default function MediaPickerSingleView({
+	item,
+	refresh,
+	isSelected = false,
+	onSelect,
+	disabled = false
+}: MediaPickerSingleViewProps) {
 	// ========================================================================
 	// State Management
 	// ========================================================================
@@ -49,6 +55,13 @@ export default function MediaSingleView({ item, refresh }: MediaSingleViewProps)
 	// ========================================================================
 
 	const handleItemClick = () => {
+		// Select the item only if not disabled
+		if (!disabled && onSelect) {
+			onSelect();
+		}
+	};
+
+	const handleItemPreview = () => {
 		setPreviewItem(item);
 	};
 
@@ -165,7 +178,13 @@ export default function MediaSingleView({ item, refresh }: MediaSingleViewProps)
 	return (
 		<>
 			<Card
-				className={`group $border-gray-200 relative transform cursor-pointer overflow-hidden border bg-white py-0 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-gray-300 hover:shadow-2xl dark:border-gray-700 dark:bg-gray-900 dark:hover:border-gray-600`}
+				className={`group relative transform cursor-pointer overflow-hidden border bg-white py-0 shadow-sm transition-all duration-300 dark:bg-gray-900 ${
+					disabled ? "cursor-not-allowed opacity-50" : "hover:-translate-y-1 hover:shadow-2xl"
+				} ${
+					isSelected
+						? "ring-opacity-50 border-blue-500 ring-2 ring-blue-500 dark:border-blue-400 dark:ring-blue-400"
+						: "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
+				}`}
 				onClick={handleItemClick}
 			>
 				<CardContent className="p-0">
@@ -182,6 +201,13 @@ export default function MediaSingleView({ item, refresh }: MediaSingleViewProps)
 									unoptimized={true}
 								/>
 								<div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+								{/* Selection Indicator */}
+								{isSelected && (
+									<div className="absolute top-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg">
+										<Check size={16} />
+									</div>
+								)}
 							</>
 						) : (
 							<div className="flex h-full items-center justify-center">
@@ -193,6 +219,13 @@ export default function MediaSingleView({ item, refresh }: MediaSingleViewProps)
 										{fileTypeLabel}
 									</Badge>
 								</div>
+
+								{/* Selection Indicator for non-image files */}
+								{isSelected && (
+									<div className="absolute top-2 left-2 flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg">
+										<Check size={16} />
+									</div>
+								)}
 							</div>
 						)}
 
@@ -205,7 +238,7 @@ export default function MediaSingleView({ item, refresh }: MediaSingleViewProps)
 									className="h-8 w-8 bg-white/90 p-0 hover:bg-white dark:bg-gray-900/90 dark:hover:bg-gray-900"
 									onClick={(e: React.MouseEvent) => {
 										e.stopPropagation();
-										handleItemClick();
+										handleItemPreview();
 									}}
 								>
 									<Eye className="h-4 w-4" />

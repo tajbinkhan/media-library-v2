@@ -31,10 +31,7 @@ interface MediaListResponse {
 }
 
 interface MediaGridViewProps {
-	onItemSelect?: (item: MediaItem) => void;
-	onItemDelete?: (item: MediaItem) => void;
 	onUpload?: () => void;
-	onRegisterRefresh?: (refreshFn: () => void) => void;
 	className?: string;
 }
 
@@ -42,14 +39,7 @@ interface MediaGridViewProps {
 // Component
 // ============================================================================
 
-export default function MediaGridView({
-	onItemSelect,
-	onItemDelete,
-	onUpload,
-	onRegisterRefresh,
-	className = ""
-}: MediaGridViewProps) {
-	const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
+export default function MediaGridView({ onUpload, className = "" }: MediaGridViewProps) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
@@ -63,34 +53,6 @@ export default function MediaGridView({
 		isLoading,
 		refresh
 	} = useCustomSWR<MediaListResponse>(mediaApiRoutes.media);
-
-	// Register refresh function with parent component
-	const hasRegistered = useRef(false);
-	const refreshFnRef = useRef(refresh);
-
-	// Keep the ref updated with the latest refresh function
-	refreshFnRef.current = refresh;
-
-	// Register the refresh function only once
-	useEffect(() => {
-		if (onRegisterRefresh && !hasRegistered.current) {
-			console.log("📝 Registering media grid refresh function");
-			onRegisterRefresh(() => {
-				console.log("🔄 Executing refresh from context");
-				if (refreshFnRef.current) {
-					refreshFnRef.current();
-				}
-			});
-			hasRegistered.current = true;
-		}
-
-		// Cleanup on unmount or when onRegisterRefresh changes
-		return () => {
-			if (hasRegistered.current) {
-				hasRegistered.current = false;
-			}
-		};
-	}, [onRegisterRefresh]); // Remove refresh from dependencies
 
 	// ========================================================================
 	// Utility Functions
@@ -169,31 +131,6 @@ export default function MediaGridView({
 		overscan: 3,
 		enabled: shouldUseVirtualization
 	});
-
-	// ========================================================================
-	// Event Handlers
-	// ========================================================================
-
-	const handleItemDelete = useCallback(
-		(item: MediaItem) => {
-			if (onItemDelete) {
-				onItemDelete(item);
-			}
-		},
-		[onItemDelete]
-	);
-
-	const toggleItemSelection = useCallback((itemId: number) => {
-		setSelectedItems(prev => {
-			const newSelection = new Set(prev);
-			if (newSelection.has(itemId)) {
-				newSelection.delete(itemId);
-			} else {
-				newSelection.add(itemId);
-			}
-			return newSelection;
-		});
-	}, []);
 
 	// ========================================================================
 	// Render Functions
@@ -423,18 +360,9 @@ export default function MediaGridView({
 										}}
 									>
 										<div className="grid grid-cols-2 gap-6 p-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-											{virtualRows[virtualRow.index]?.map(item => {
-												const isSelected = selectedItems.has(item.id);
-												return (
-													<MediaSingleView
-														key={item.id}
-														item={item}
-														isSelected={isSelected}
-														onItemDelete={handleItemDelete}
-														refresh={refresh}
-													/>
-												);
-											})}
+											{virtualRows[virtualRow.index]?.map(item => (
+												<MediaSingleView key={item.id} item={item} refresh={refresh} />
+											))}
 										</div>
 									</div>
 								))}
@@ -442,18 +370,9 @@ export default function MediaGridView({
 						) : (
 							// Simple rendering for smaller lists
 							<div className="grid grid-cols-2 gap-6 p-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-								{filteredItems.map(item => {
-									const isSelected = selectedItems.has(item.id);
-									return (
-										<MediaSingleView
-											key={item.id}
-											item={item}
-											isSelected={isSelected}
-											onItemDelete={handleItemDelete}
-											refresh={refresh}
-										/>
-									);
-								})}
+								{filteredItems.map(item => (
+									<MediaSingleView key={item.id} item={item} refresh={refresh} />
+								))}
 							</div>
 						)}
 					</div>

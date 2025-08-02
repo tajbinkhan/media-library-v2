@@ -246,14 +246,6 @@ export default function MediaPreviewModal({ item, onClose, refresh }: MediaPrevi
 									<p className="text-sm text-gray-900 dark:text-gray-100">{item.altText}</p>
 								</div>
 							)}
-							{item.description && (
-								<div>
-									<Label className="text-sm font-medium text-gray-500 dark:text-gray-400">
-										Description
-									</Label>
-									<p className="text-sm text-gray-900 dark:text-gray-100">{item.description}</p>
-								</div>
-							)}
 						</div>
 						<div className="space-y-3">
 							<div>

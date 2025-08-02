@@ -12,12 +12,25 @@ export const mediaUpdateSchema = z.object({
  * Validation for single media item
  */
 export const validateMediaItem = (name: string, required: boolean = false) => {
-	const schema = z.object({
-		id: validatePositiveNumber("ID"),
-		originalFilename: validateString("Original Filename"),
-		secureUrl: validateString("Secure URL"),
-		altText: validateString("Alt Text").optional().nullable()
-	});
+	const schema = z.object(
+		{
+			id: validatePositiveNumber("ID"),
+			originalFilename: validateString("Original Filename"),
+			mimeType: validateString("MIME Type"),
+			secureUrl: validateString("Secure URL"),
+			fileSize: validatePositiveNumber("File Size"),
+			width: validatePositiveNumber("Width").optional(),
+			height: validatePositiveNumber("Height").optional(),
+			altText: validateString("Alt Text").optional().nullable(),
+			createdAt: validateString("Created At")
+		},
+		{
+			error: issue =>
+				issue.input === undefined || issue.input === null
+					? zodMessages.error.required.fieldIsRequired(name)
+					: zodMessages.error.invalid.invalidFile(name)
+		}
+	);
 
 	if (required) {
 		return schema.refine(data => data !== null && data !== undefined, {
@@ -38,12 +51,40 @@ export const validateMediaArray = (
 	maxItems?: number
 ) => {
 	let schema = z.array(
-		z.object({
-			id: validatePositiveNumber("ID"),
-			originalFilename: validateString("Original Filename"),
-			secureUrl: validateString("Secure URL"),
-			altText: validateString("Alt Text").optional().nullable()
-		})
+		z.object(
+			{
+				id: validatePositiveNumber("ID"),
+				filename: validateString("Filename"),
+				originalFilename: validateString("Original Filename"),
+				mimeType: validateString("MIME Type"),
+				fileExtension: validateString("File Extension"),
+				secureUrl: validateString("Secure URL"),
+				fileSize: validatePositiveNumber("File Size"),
+				width: validatePositiveNumber("Width").optional(),
+				height: validatePositiveNumber("Height").optional(),
+				duration: validatePositiveNumber("Duration").optional().nullable(),
+				storageKey: validateString("Storage Key"),
+				mediaType: validateString("Media Type"),
+				altText: validateString("Alt Text").optional().nullable(),
+				caption: validateString("Caption").optional().nullable(),
+				description: validateString("Description").optional().nullable(),
+				tags: validateString("Tags").optional().nullable(),
+				createdAt: validateString("Created At"),
+				updatedAt: validateString("Updated At")
+			},
+			{
+				error: issue =>
+					issue.input === undefined || issue.input === null
+						? zodMessages.error.required.fieldIsRequired(name)
+						: zodMessages.error.invalid.invalidFile(name)
+			}
+		),
+		{
+			error: issue =>
+				issue.input === undefined || issue.input === null
+					? zodMessages.error.required.fieldIsRequired(name)
+					: zodMessages.error.invalid.invalidFile(name)
+		}
 	);
 
 	if (minItems !== undefined) {

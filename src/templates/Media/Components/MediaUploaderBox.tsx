@@ -36,7 +36,6 @@ export default function MediaUploaderBox({
 	const {
 		acceptedFiles,
 		rejectedFiles,
-		uploadComplete,
 		addAcceptedFiles,
 		addRejectedFiles,
 		removeAcceptedFile,

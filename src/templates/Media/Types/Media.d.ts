@@ -3,31 +3,6 @@
 // ============================================================================
 
 /**
- * Represents a media item from the database
- */
-interface MediaItem {
-	id: number;
-	filename: string;
-	originalFilename: string;
-	mimeType: string;
-	fileExtension: string;
-	secureUrl: string;
-	fileSize: number;
-	width?: number;
-	height?: number;
-	duration?: number | null;
-	storageKey: string;
-	mediaType: string;
-	altText?: string | null;
-	caption?: string | null;
-	description?: string | null;
-	tags?: string | null;
-	createdAt: string;
-	updatedAt: string;
-	storageMetadata?: any;
-}
-
-/**
  * Form data for editing media items
  */
 interface EditForm {
@@ -41,9 +16,18 @@ interface EditForm {
  */
 interface MediaSingleViewProps {
 	item: MediaItem;
-	isSelected: boolean;
-	onItemDelete: (item: MediaItem) => void;
 	refresh: () => void;
+}
+
+/**
+ * Props for MediaPickerSingleView component
+ */
+interface MediaPickerSingleViewProps {
+	item: MediaItem;
+	refresh: () => void;
+	isSelected?: boolean;
+	onSelect?: () => void;
+	disabled?: boolean;
 }
 
 /**
@@ -376,14 +360,10 @@ interface UploadEvent {
 interface MediaItem {
 	/** Unique identifier for the media item */
 	id: number;
-	/** Generated filename */
-	filename: string;
 	/** Original filename */
 	originalFilename: string;
 	/** MIME type of the file */
 	mimeType: string;
-	/** File extension */
-	fileExtension: string;
 	/** Secure URL to access the media file */
 	secureUrl: string;
 	/** File size in bytes */
@@ -392,26 +372,12 @@ interface MediaItem {
 	width?: number;
 	/** Image height */
 	height?: number;
-	/** Media duration (for videos/audio) */
-	duration?: number | null;
-	/** Storage key */
-	storageKey: string;
-	/** Media type */
-	mediaType: string;
 	/** Alternative text for accessibility */
 	altText?: string | null;
-	/** Caption */
-	caption?: string | null;
-	/** Description */
-	description?: string | null;
-	/** Tags */
-	tags?: string | null;
 	/** Creation timestamp */
 	createdAt: string;
-	/** Last update timestamp */
-	updatedAt: string;
-	/** Storage metadata */
-	storageMetadata?: any;
+	/** Last updated timestamp */
+	updatedAt?: string;
 }
 
 /**
