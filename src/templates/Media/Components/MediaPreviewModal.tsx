@@ -1,5 +1,6 @@
 "use client";
 
+import { useMediaDownload } from "../Hooks/useMediaDownload";
 import {
 	Check,
 	Copy,
@@ -8,6 +9,7 @@ import {
 	FileImage,
 	FileText,
 	FileVideo,
+	Loader2,
 	Music,
 	Trash2
 } from "lucide-react";
@@ -38,6 +40,9 @@ export default function MediaPreviewModal({ item, onClose, refresh }: MediaPrevi
 	const [copySuccess, setCopySuccess] = useState<string | null>(null);
 	const [deleteItem, setDeleteItem] = useState<MediaItem | null>(null);
 
+	// Download hook
+	const { downloadState, download } = useMediaDownload();
+
 	// ========================================================================
 	// Event Handlers
 	// ========================================================================
@@ -52,13 +57,8 @@ export default function MediaPreviewModal({ item, onClose, refresh }: MediaPrevi
 		}
 	};
 
-	const handleDownloadFile = (url: string, filename: string) => {
-		const link = document.createElement("a");
-		link.href = url;
-		link.download = filename;
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
+	const handleDownloadFile = async (mediaItem: MediaItem) => {
+		await download(mediaItem);
 	};
 
 	const handleDeleteStart = () => {
@@ -172,10 +172,20 @@ export default function MediaPreviewModal({ item, onClose, refresh }: MediaPrevi
 					<Button
 						variant="outline"
 						size="sm"
-						onClick={() => handleDownloadFile(item.secureUrl, item.originalFilename)}
+						onClick={() => handleDownloadFile(item)}
+						disabled={downloadState.isDownloading && downloadState.downloadingFileId === item.id}
 						className="flex items-center gap-2"
+						title={
+							downloadState.isDownloading && downloadState.downloadingFileId === item.id
+								? `Downloading... ${downloadState.progress}%`
+								: "Download file"
+						}
 					>
-						<Download className="h-4 w-4" />
+						{downloadState.isDownloading && downloadState.downloadingFileId === item.id ? (
+							<Loader2 className="h-4 w-4 animate-spin" />
+						) : (
+							<Download className="h-4 w-4" />
+						)}
 					</Button>
 					{refresh && (
 						<Button

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMediaDownload } from "../Hooks/useMediaDownload";
 import {
 	Calendar,
 	Check,
@@ -11,6 +12,7 @@ import {
 	FileImage,
 	FileText,
 	FileVideo,
+	Loader2,
 	Music,
 	Trash2
 } from "lucide-react";
@@ -43,6 +45,10 @@ export default function MediaSingleView({
 	const [editItem, setEditItem] = useState<MediaItem | null>(null);
 	const [deleteItem, setDeleteItem] = useState<MediaItem | null>(null);
 	const [copySuccess, setCopySuccess] = useState<string | null>(null);
+
+	// Download hook
+	const { downloadState, download } = useMediaDownload();
+
 	// ========================================================================
 	// Event Handlers
 	// ========================================================================
@@ -77,13 +83,8 @@ export default function MediaSingleView({
 		}
 	};
 
-	const handleDownloadFile = (url: string, filename: string) => {
-		const link = document.createElement("a");
-		link.href = url;
-		link.download = filename;
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
+	const handleDownloadFile = async (mediaItem: MediaItem) => {
+		await download(mediaItem);
 	};
 
 	const handleEditSave = () => {
@@ -239,10 +240,22 @@ export default function MediaSingleView({
 									className="h-8 w-8 bg-white/90 p-0 hover:bg-white dark:bg-gray-900/90 dark:hover:bg-gray-900"
 									onClick={(e: React.MouseEvent) => {
 										e.stopPropagation();
-										handleDownloadFile(item.secureUrl, item.originalFilename);
+										handleDownloadFile(item);
 									}}
+									disabled={
+										downloadState.isDownloading && downloadState.downloadingFileId === item.id
+									}
+									title={
+										downloadState.isDownloading && downloadState.downloadingFileId === item.id
+											? `Downloading... ${downloadState.progress}%`
+											: "Download file"
+									}
 								>
-									<Download className="h-4 w-4" />
+									{downloadState.isDownloading && downloadState.downloadingFileId === item.id ? (
+										<Loader2 className="h-4 w-4 animate-spin" />
+									) : (
+										<Download className="h-4 w-4" />
+									)}
 								</Button>
 							</div>
 						</div>
