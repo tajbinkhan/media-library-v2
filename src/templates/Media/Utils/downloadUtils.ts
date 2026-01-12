@@ -170,7 +170,7 @@ async function downloadViaBlob(
 		}
 
 		// Combine chunks into blob
-		const blob = new Blob(chunks);
+		const blob = new Blob(chunks as BlobPart[]);
 		const downloadUrl = window.URL.createObjectURL(blob);
 
 		const link = document.createElement("a");
