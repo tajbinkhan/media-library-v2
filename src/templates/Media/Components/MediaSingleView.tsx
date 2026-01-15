@@ -71,7 +71,7 @@ export default function MediaSingleView({ item, refresh }: MediaSingleViewProps)
 	const handleCopyToClipboard = async (text: string) => {
 		try {
 			await navigator.clipboard.writeText(text);
-			setCopySuccess(`item-${item.id}`);
+			setCopySuccess(`item-${item.secureUrl}`);
 			setTimeout(() => setCopySuccess(null), 2000);
 		} catch (error) {
 			console.error("Failed to copy to clipboard:", error);
@@ -170,7 +170,7 @@ export default function MediaSingleView({ item, refresh }: MediaSingleViewProps)
 			>
 				<CardContent className="p-0">
 					{/* Media Preview */}
-					<div className="relative aspect-square bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+					<div className="relative aspect-square bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
 						{isImage && item.secureUrl ? (
 							<>
 								<Image
@@ -181,7 +181,7 @@ export default function MediaSingleView({ item, refresh }: MediaSingleViewProps)
 									sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16.67vw"
 									unoptimized={true}
 								/>
-								<div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+								<div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 							</>
 						) : (
 							<div className="flex h-full items-center justify-center">
@@ -219,7 +219,7 @@ export default function MediaSingleView({ item, refresh }: MediaSingleViewProps)
 										handleCopyToClipboard(item.secureUrl);
 									}}
 								>
-									{copySuccess === `item-${item.id}` ? (
+									{copySuccess === `item-${item.secureUrl}` ? (
 										<Check className="h-4 w-4 text-green-500" />
 									) : (
 										<Copy className="h-4 w-4" />
@@ -234,15 +234,18 @@ export default function MediaSingleView({ item, refresh }: MediaSingleViewProps)
 										handleDownloadFile(item);
 									}}
 									disabled={
-										downloadState.isDownloading && downloadState.downloadingFileId === item.id
+										downloadState.isDownloading &&
+										downloadState.downloadingFileId === item.secureUrl
 									}
 									title={
-										downloadState.isDownloading && downloadState.downloadingFileId === item.id
+										downloadState.isDownloading &&
+										downloadState.downloadingFileId === item.secureUrl
 											? `Downloading... ${downloadState.progress}%`
 											: "Download file"
 									}
 								>
-									{downloadState.isDownloading && downloadState.downloadingFileId === item.id ? (
+									{downloadState.isDownloading &&
+									downloadState.downloadingFileId === item.secureUrl ? (
 										<Loader2 className="h-4 w-4 animate-spin" />
 									) : (
 										<Download className="h-4 w-4" />
@@ -303,7 +306,7 @@ export default function MediaSingleView({ item, refresh }: MediaSingleViewProps)
 							<Button
 								variant="ghost"
 								size="sm"
-								className="h-6 w-6 flex-shrink-0 p-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+								className="h-6 w-6 shrink-0 p-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
 								onClick={(e: React.MouseEvent) => {
 									e.stopPropagation();
 									handleEditStart();

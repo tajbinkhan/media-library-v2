@@ -1,17 +1,15 @@
 "use client";
 
-import axios, { AxiosProgressEvent, CancelTokenSource } from "axios";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-
-import axiosApi from "@/lib/axios-config";
 
 import {
 	ACCEPTED_FILE_TYPES,
 	MAX_CONCURRENT_UPLOADS,
 	MAX_FILES,
 	MAX_FILE_SIZE
-} from "@/templates/Media/Constants/Media.contant";
+} from "@/templates/Media/Constants/Media.constant";
+import { useMediaUploadMutation } from "@/templates/Media/Redux/MediaAPISlice";
 import { mediaApiRoutes } from "@/templates/Media/Routes/MediaRoutes";
 
 // Define types locally since .d.ts files cannot be imported
@@ -21,9 +19,9 @@ interface UploadedFile extends File {
 	progress?: number;
 	status?: "pending" | "uploading" | "completed" | "failed" | "cancelled";
 	preview?: string;
-	cancelTokenSource?: CancelTokenSource;
+	abortController?: AbortController;
 	uploadedUrl?: string;
-	serverId?: string;
+	serverPublicId?: string;
 	metadata?: {
 		dimensions?: { width: number; height: number };
 		dates?: { created?: Date; modified?: Date; uploaded?: Date };
@@ -173,6 +171,12 @@ interface MediaProviderProps {
 
 export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 	// ========================================================================
+	// Redux Hooks
+	// ========================================================================
+
+	const [uploadMedia] = useMediaUploadMutation();
+
+	// ========================================================================
 	// State
 	// ========================================================================
 
@@ -317,9 +321,9 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 		}
 
 		try {
-			// Create cancel token
-			const cancelTokenSource = axios.CancelToken.source();
-			file.cancelTokenSource = cancelTokenSource;
+			// Create abort controller for cancellation
+			const abortController = new AbortController();
+			file.abortController = abortController;
 
 			// Update file status to uploading
 			setAcceptedFiles(prev =>
@@ -342,45 +346,43 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 			formData.append("file", file);
 			formData.append("fileName", file.name);
 
-			// Upload with progress tracking
-			const response = await axiosApi.post(uploadConfig.uploadUrl, formData, {
-				headers: {
-					"Content-Type": "multipart/form-data"
-				},
-				cancelToken: cancelTokenSource.token,
-				onUploadProgress: (progressEvent: AxiosProgressEvent) => {
-					if (progressEvent.total) {
-						const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-						setAcceptedFiles(prev =>
-							prev.map(f => {
-								if (f.id === file.id) {
-									const updatedFile = f;
-									updatedFile.progress = progress;
-									return updatedFile;
-								}
-								return f;
-							})
-						);
-					}
-				}
-			});
+			// Simulate progress updates since RTK Query doesn't provide native progress tracking
+			const progressInterval = setInterval(() => {
+				setAcceptedFiles(prev =>
+					prev.map(f => {
+						if (f.id === file.id && f.status === "uploading" && (f.progress || 0) < 90) {
+							const updatedFile = f;
+							// Increment progress gradually up to 90%
+							updatedFile.progress = Math.min((f.progress || 0) + 10, 90);
+							return updatedFile;
+						}
+						return f;
+					})
+				);
+			}, 300);
 
-			// Upload successful - Update status to completed but keep in list
+			// Upload using Redux API slice
+			const response = await uploadMedia(formData).unwrap();
+
+			// Clear progress interval
+			clearInterval(progressInterval);
+
+			// Upload successful - Update status to completed
 			setAcceptedFiles(prev =>
 				prev.map(f => {
 					if (f.id === file.id) {
 						const updatedFile = f;
 						updatedFile.status = "completed";
 						updatedFile.progress = 100;
-						updatedFile.uploadedUrl = response.data?.url || response.data?.uploadedUrl;
-						updatedFile.serverId = response.data?.id || response.data?.serverId;
+						updatedFile.uploadedUrl = response.data?.secureUrl;
+						updatedFile.serverPublicId = response.data?.publicId;
 						return updatedFile;
 					}
 					return f;
 				})
 			);
-		} catch (error) {
-			if (axios.isCancel(error)) {
+		} catch (uploadError: any) {
+			if (uploadError.name === "AbortError" || uploadError.message?.includes("abort")) {
 				setAcceptedFiles(prev =>
 					prev.map(f => {
 						if (f.id === file.id) {
@@ -392,9 +394,7 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 					})
 				);
 			} else {
-				const errorMessage = axios.isAxiosError(error)
-					? error.response?.data?.message || error.message
-					: "Upload failed";
+				const errorMessage = uploadError?.data?.message || uploadError?.message || "Upload failed";
 
 				setAcceptedFiles(prev =>
 					prev.map(f => {
@@ -420,14 +420,16 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 			// Remove from upload queue
 			setUploadQueue(prev => prev.filter(f => f.id !== file.id));
 
-			// Remove any existing error for successful uploads
-			if (!Error || axios.isCancel(Error)) {
-				setUploadErrors(prev => {
+			// Remove any existing error for successful uploads (no need to check error variable)
+			setUploadErrors(prev => {
+				const currentFile = acceptedFiles.find(f => f.id === file.id);
+				if (currentFile?.status === "completed") {
 					const newMap = new Map(prev);
 					newMap.delete(file.id!);
 					return newMap;
-				});
-			}
+				}
+				return prev;
+			});
 		}
 	};
 
@@ -449,8 +451,8 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 
 	const cancelUpload = (fileId: string): void => {
 		const file = acceptedFiles.find(f => f.id === fileId);
-		if (file?.cancelTokenSource) {
-			file.cancelTokenSource.cancel("Upload cancelled by user");
+		if (file?.abortController) {
+			file.abortController.abort();
 		}
 
 		// Remove from active uploads
@@ -519,9 +521,9 @@ export function MediaProvider({ children, initialConfig }: MediaProviderProps) {
 		// Cancel all files that are currently uploading
 		acceptedFiles.forEach(file => {
 			if (file.id && activeUploads.has(file.id)) {
-				const cancelTokenSource = file.cancelTokenSource;
-				if (cancelTokenSource) {
-					cancelTokenSource.cancel("All uploads cancelled by user");
+				const abortController = file.abortController;
+				if (abortController) {
+					abortController.abort();
 				}
 			}
 		});

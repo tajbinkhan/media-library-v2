@@ -13,7 +13,7 @@ interface DownloadState {
 	/** Download error if any */
 	error: string | null;
 	/** ID of the currently downloading file */
-	downloadingFileId: number | null;
+	downloadingFileId: string | null;
 }
 
 interface UseMediaDownloadReturn {
@@ -42,12 +42,12 @@ export function useMediaDownload(): UseMediaDownloadReturn {
 				isDownloading: true,
 				progress: 0,
 				error: null,
-				downloadingFileId: mediaItem.id
+				downloadingFileId: mediaItem.secureUrl
 			});
 
 			await downloadMediaFile(
 				{
-					id: mediaItem.id,
+					publicId: mediaItem.publicId,
 					originalFilename: mediaItem.originalFilename,
 					secureUrl: mediaItem.secureUrl
 				},

@@ -1,29 +1,19 @@
-import { FlatCompat } from "@eslint/eslintrc";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
 import unusedImports from "eslint-plugin-unused-imports";
-import { dirname } from "path";
-import { fileURLToPath } from "url";
+import { defineConfig, globalIgnores } from "eslint/config";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-	baseDirectory: __dirname
-});
-
-const eslintConfig = [
-	// Basic configuration
-	{
-		files: ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
-		ignores: ["node_modules/**", ".next/**", "out/**", "dist/**"],
-		languageOptions: {
-			ecmaVersion: 2022,
-			sourceType: "module"
-		}
-	},
-
-	// Next.js configuration via FlatCompat
-	...compat.extends("next/core-web-vitals", "next/typescript"),
-
+const eslintConfig = defineConfig([
+	...nextVitals,
+	...nextTs,
+	// Override default ignores of eslint-config-next.
+	globalIgnores([
+		// Default ignores of eslint-config-next:
+		".next/**",
+		"out/**",
+		"build/**",
+		"next-env.d.ts"
+	]),
 	// Add unused-imports plugin
 	{
 		plugins: {
@@ -54,17 +44,17 @@ const eslintConfig = [
 					args: "after-used",
 					argsIgnorePattern: "^_"
 				}
-			],
+			]
 			// Only applicable for nextjs-toploader
 			// Remove this if you are not using nextjs-toploader
-			"no-restricted-imports": [
-				"error",
-				{
-					name: "next/navigation",
-					importNames: ["useRouter"],
-					message: "Please import from `nextjs-toploader/app` instead."
-				}
-			]
+			// "no-restricted-imports": [
+			// 	"error",
+			// 	{
+			// 		name: "next/navigation",
+			// 		importNames: ["useRouter"],
+			// 		message: "Please import from `nextjs-toploader/app` instead."
+			// 	}
+			// ],
 			// Only applicable for next-intl
 			// Remove this if you are not using next-intl
 			// "no-restricted-imports": [
@@ -81,6 +71,6 @@ const eslintConfig = [
 			// ]
 		}
 	}
-];
+]);
 
 export default eslintConfig;

@@ -19,9 +19,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 import MediaUploaderBox from "@/templates/Media/Components/MediaUploaderBox";
 import { useMedia } from "@/templates/Media/Contexts/MediaContext";
-import useCustomSWR from "@/templates/Media/Hooks/useCustomSWR";
 import MediaPickerSingleView from "@/templates/Media/Picker/MediaPickerSingleView";
-import { mediaApiRoutes } from "@/templates/Media/Routes/MediaRoutes";
+import { useMediaListQuery } from "@/templates/Media/Redux/MediaAPISlice";
 
 interface MediaPickerGridViewProps {
 	selectedValue?: MediaItem | MediaItem[] | null;
@@ -72,11 +71,15 @@ export default function MediaPickerGridView({
 
 	const handleItemSelect = (item: MediaItem) => {
 		if (multiple) {
-			const isAlreadySelected = selectedItems.some(selected => selected.id === item.id);
+			const isAlreadySelected = selectedItems.some(
+				selected => selected.secureUrl === item.secureUrl
+			);
 
 			if (isAlreadySelected) {
 				// Remove item from selection
-				const newSelection = selectedItems.filter(selected => selected.id !== item.id);
+				const newSelection = selectedItems.filter(
+					selected => selected.secureUrl !== item.secureUrl
+				);
 				// Check minimum constraint
 				if (newSelection.length >= min) {
 					setSelectedItems(newSelection);
@@ -93,14 +96,14 @@ export default function MediaPickerGridView({
 		} else {
 			// Single selection
 			const newSelection =
-				selectedItems.length > 0 && selectedItems[0].id === item.id ? [] : [item];
+				selectedItems.length > 0 && selectedItems[0].secureUrl === item.secureUrl ? [] : [item];
 			setSelectedItems(newSelection);
 			onSelect?.(newSelection.length > 0 ? newSelection[0] : null);
 		}
 	};
 
 	const isItemSelected = (item: MediaItem): boolean => {
-		return selectedItems.some(selected => selected.id === item.id);
+		return selectedItems.some(selected => selected.secureUrl === item.secureUrl);
 	};
 
 	const isItemDisabled = (item: MediaItem): boolean => {
@@ -113,12 +116,7 @@ export default function MediaPickerGridView({
 
 	const { isUploaderOpen, openUploader, closeUploader } = useMedia();
 
-	const {
-		data: response,
-		error,
-		isLoading,
-		refresh
-	} = useCustomSWR<MediaListResponse>(mediaApiRoutes.media);
+	const { data: response, error, isLoading, refetch: refresh } = useMediaListQuery();
 
 	// ========================================================================
 	// Data Processing
@@ -172,6 +170,7 @@ export default function MediaPickerGridView({
 	const shouldUseVirtualization = filteredItems.length > 30;
 
 	// Virtualization setup (only for large lists)
+	// eslint-disable-next-line react-hooks/incompatible-library
 	const rowVirtualizer = useVirtualizer({
 		count: virtualRows.length,
 		getScrollElement: () => parentRef.current,
@@ -186,7 +185,7 @@ export default function MediaPickerGridView({
 			<MediaUploaderBox isOpen={isUploaderOpen} onClose={closeUploader} />
 			<Dialog>
 				<DialogTrigger asChild>
-					<Button variant="outline" className="flex min-h-12 items-center gap-2 p-3">
+					<Button variant="outline" className="flex min-h-12 w-full items-center gap-2 p-3">
 						<Plus size={20} />
 						<span className="text-sm">
 							{selectedItems.length > 0
@@ -197,7 +196,7 @@ export default function MediaPickerGridView({
 						</span>
 					</Button>
 				</DialogTrigger>
-				<DialogContent className="w-full lg:max-w-[80rem]" style={{ maxHeight: "90vh" }}>
+				<DialogContent className="w-full lg:max-w-7xl" style={{ maxHeight: "90vh" }}>
 					<DialogHeader>
 						<DialogTitle>Media Library</DialogTitle>
 						<DialogDescription>
@@ -239,7 +238,7 @@ export default function MediaPickerGridView({
 									onClick={openUploader}
 									variant="default"
 									size="sm"
-									className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700"
+									className="bg-linear-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700"
 									title="Upload new media files"
 								>
 									<Upload className="h-4 w-4" />
@@ -286,7 +285,7 @@ export default function MediaPickerGridView({
 											<div className="grid grid-cols-2 gap-6 p-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
 												{virtualRows[virtualRow.index]?.map(item => (
 													<MediaPickerSingleView
-														key={item.id}
+														key={item.secureUrl}
 														item={item}
 														refresh={refresh}
 														isSelected={isItemSelected(item)}
@@ -303,7 +302,7 @@ export default function MediaPickerGridView({
 								<div className="grid grid-cols-2 gap-6 p-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
 									{filteredItems.map(item => (
 										<MediaPickerSingleView
-											key={item.id}
+											key={item.secureUrl}
 											item={item}
 											refresh={refresh}
 											isSelected={isItemSelected(item)}

@@ -358,8 +358,8 @@ interface UploadEvent {
  * Media item from the API (fetched media)
  */
 interface MediaItem {
-	/** Unique identifier for the media item */
-	id: number;
+	/** Public identifier for the media item */
+	publicId: string;
 	/** Original filename */
 	originalFilename: string;
 	/** MIME type of the file */
@@ -378,6 +378,19 @@ interface MediaItem {
 	createdAt: string;
 	/** Last updated timestamp */
 	updatedAt?: string;
+}
+
+/** Standard API response for a single media item
+ */
+interface MediaItemResponse {
+	/** Original filename */
+	originalFilename: string;
+	/** Secure URL to access the media file */
+	secureUrl: string;
+	/** Alternative text for accessibility */
+	altText?: string | null;
+	/** MIME type of the file */
+	mimeType: string;
 }
 
 /**
@@ -405,7 +418,6 @@ interface UploadResponse {
 	success: boolean;
 	/** Uploaded file information */
 	file?: {
-		id: string;
 		name: string;
 		url: string;
 		size: number;

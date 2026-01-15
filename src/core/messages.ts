@@ -9,9 +9,7 @@ export const zodMessages = {
 			arrayMin: (field: string, limit: number) => `${field} must have at least ${limit} items.`,
 			arrayMax: (field: string, limit: number) => `${field} must not exceed ${limit} items.`,
 			numberMin: (field: string, limit: number) => `${field} must be at least ${limit}.`,
-			numberMax: (field: string, limit: number) => `${field} must not exceed ${limit}.`,
-			fileSize: (field: string, limit: string) => `${field} must not exceed ${limit}.`,
-			length: (field: string, limit: number) => `${field} must be exactly ${limit} characters long.`
+			numberMax: (field: string, limit: number) => `${field} must not exceed ${limit}.`
 		},
 		invalid: {
 			invalidString: (field: string) => `${field} must be a string.`,
@@ -52,7 +50,8 @@ export const zodMessages = {
 			invalidUsername: (field: string) =>
 				`${field} must contain only letters, numbers, and underscores.`,
 			invalidUsernameOrEmail: (field: string) =>
-				`${field} must be a valid username or email address.`
+				`${field} must be a valid username or email address.`,
+			invalidUUID: (field: string) => `${field} must be a valid UUID.`
 		}
 	}
 };

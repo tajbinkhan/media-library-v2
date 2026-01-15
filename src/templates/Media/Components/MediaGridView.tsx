@@ -11,8 +11,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import MediaSingleView from "./MediaSingleView";
-import useCustomSWR from "@/templates/Media/Hooks/useCustomSWR";
-import { mediaApiRoutes } from "@/templates/Media/Routes/MediaRoutes";
+import { useMediaListQuery } from "@/templates/Media/Redux/MediaAPISlice";
 
 // ============================================================================
 // Types
@@ -46,13 +45,8 @@ export default function MediaGridView({ onUpload, className = "" }: MediaGridVie
 	// Ref for virtualization container
 	const parentRef = useRef<HTMLDivElement>(null);
 
-	// Fetch media list using SWR
-	const {
-		data: response,
-		error,
-		isLoading,
-		refresh
-	} = useCustomSWR<MediaListResponse>(mediaApiRoutes.media);
+	// Fetch media list using Redux RTK Query
+	const { data: response, error, isLoading, refetch: refresh } = useMediaListQuery();
 
 	// ========================================================================
 	// Utility Functions
@@ -124,6 +118,7 @@ export default function MediaGridView({ onUpload, className = "" }: MediaGridVie
 	const shouldUseVirtualization = filteredItems.length > 30;
 
 	// Virtualization setup (only for large lists)
+	// eslint-disable-next-line react-hooks/incompatible-library
 	const rowVirtualizer = useVirtualizer({
 		count: virtualRows.length,
 		getScrollElement: () => parentRef.current,
@@ -141,12 +136,12 @@ export default function MediaGridView({ onUpload, className = "" }: MediaGridVie
 			{Array.from({ length: 12 }).map((_, index) => (
 				<Card
 					key={index}
-					className="group overflow-hidden border-0 bg-gradient-to-br from-gray-50 to-gray-100 shadow-sm transition-all duration-300 hover:shadow-md dark:from-gray-900 dark:to-gray-800"
+					className="group overflow-hidden border-0 bg-linear-to-br from-gray-50 to-gray-100 shadow-sm transition-all duration-300 hover:shadow-md dark:from-gray-900 dark:to-gray-800"
 				>
 					<CardContent className="p-0">
 						<div className="relative">
 							<Skeleton className="aspect-square w-full rounded-t-lg" />
-							<div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+							<div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
 						</div>
 						<div className="space-y-3 p-4">
 							<Skeleton className="h-4 w-full" />
@@ -163,7 +158,7 @@ export default function MediaGridView({ onUpload, className = "" }: MediaGridVie
 
 	const renderEmptyState = () => (
 		<div className="flex flex-col items-center justify-center py-20 text-center">
-			<div className="mb-6 rounded-full bg-gradient-to-br from-blue-50 to-indigo-100 p-6 dark:from-blue-900/20 dark:to-indigo-900/20">
+			<div className="mb-6 rounded-full bg-linear-to-br from-blue-50 to-indigo-100 p-6 dark:from-blue-900/20 dark:to-indigo-900/20">
 				<HardDrive className="h-12 w-12 text-blue-500" />
 			</div>
 			<h3 className="mb-3 text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -175,7 +170,7 @@ export default function MediaGridView({ onUpload, className = "" }: MediaGridVie
 			</p>
 			<Button
 				onClick={onUpload}
-				className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700"
+				className="bg-linear-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700"
 			>
 				<Upload className="mr-2 h-4 w-4" />
 				Upload Your First File
@@ -185,17 +180,25 @@ export default function MediaGridView({ onUpload, className = "" }: MediaGridVie
 
 	const renderErrorState = () => (
 		<div className="flex flex-col items-center justify-center py-20 text-center">
-			<div className="mb-6 rounded-full bg-gradient-to-br from-red-50 to-red-100 p-6 dark:from-red-900/20 dark:to-red-900/20">
+			<div className="mb-6 rounded-full bg-linear-to-br from-red-50 to-red-100 p-6 dark:from-red-900/20 dark:to-red-900/20">
 				<Trash2 className="h-12 w-12 text-red-500" />
 			</div>
 			<h3 className="mb-3 text-xl font-semibold text-red-900 dark:text-red-100">
 				Unable to load media files
 			</h3>
 			<p className="mb-6 max-w-md text-sm text-red-600 dark:text-red-400">
-				{error?.message ||
-					"Something went wrong while fetching your media files. Please try again."}
+				{error &&
+				"data" in error &&
+				typeof error.data === "object" &&
+				error.data &&
+				"message" in error.data
+					? String(error.data.message)
+					: error && "message" in error && error.message
+						? error.message
+						: "Something went wrong while fetching your media files. Please try again."}
 			</p>
 			<Button
+				type="button"
 				onClick={refresh}
 				variant="outline"
 				className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
@@ -215,7 +218,7 @@ export default function MediaGridView({ onUpload, className = "" }: MediaGridVie
 			<div className="mb-8">
 				<div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 					<div>
-						<h2 className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-3xl font-bold text-transparent dark:from-gray-100 dark:to-gray-400">
+						<h2 className="bg-linear-to-r from-gray-900 to-gray-600 bg-clip-text text-3xl font-bold text-transparent dark:from-gray-100 dark:to-gray-400">
 							Media Library
 						</h2>
 						<p className="mt-1 text-gray-500 dark:text-gray-400">
@@ -247,6 +250,7 @@ export default function MediaGridView({ onUpload, className = "" }: MediaGridVie
 							<Button
 								variant={viewMode === "grid" ? "default" : "ghost"}
 								size="sm"
+								type="button"
 								onClick={() => setViewMode("grid")}
 								className="h-8 px-3"
 							>
@@ -259,8 +263,9 @@ export default function MediaGridView({ onUpload, className = "" }: MediaGridVie
 							<Button
 								onClick={onUpload}
 								variant="default"
+								type="button"
 								size="sm"
-								className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700"
+								className="bg-linear-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700"
 							>
 								<Upload className="mr-2 h-4 w-4" />
 								Upload
@@ -272,6 +277,7 @@ export default function MediaGridView({ onUpload, className = "" }: MediaGridVie
 							<Button
 								onClick={refresh}
 								variant="outline"
+								type="button"
 								size="sm"
 								disabled={isLoading}
 								className="border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
@@ -310,7 +316,7 @@ export default function MediaGridView({ onUpload, className = "" }: MediaGridVie
 			) : filteredItems.length === 0 ? (
 				searchQuery ? (
 					<div className="flex flex-col items-center justify-center py-20 text-center">
-						<div className="mb-6 rounded-full bg-gradient-to-br from-gray-50 to-gray-100 p-6 dark:from-gray-900/20 dark:to-gray-800/20">
+						<div className="mb-6 rounded-full bg-linear-to-br from-gray-50 to-gray-100 p-6 dark:from-gray-900/20 dark:to-gray-800/20">
 							<Search className="h-12 w-12 text-gray-400" />
 						</div>
 						<h3 className="mb-3 text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -361,7 +367,7 @@ export default function MediaGridView({ onUpload, className = "" }: MediaGridVie
 									>
 										<div className="grid grid-cols-2 gap-6 p-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
 											{virtualRows[virtualRow.index]?.map(item => (
-												<MediaSingleView key={item.id} item={item} refresh={refresh} />
+												<MediaSingleView key={item.publicId} item={item} refresh={refresh} />
 											))}
 										</div>
 									</div>
@@ -371,7 +377,7 @@ export default function MediaGridView({ onUpload, className = "" }: MediaGridVie
 							// Simple rendering for smaller lists
 							<div className="grid grid-cols-2 gap-6 p-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
 								{filteredItems.map(item => (
-									<MediaSingleView key={item.id} item={item} refresh={refresh} />
+									<MediaSingleView key={item.publicId} item={item} refresh={refresh} />
 								))}
 							</div>
 						)}

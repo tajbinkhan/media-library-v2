@@ -229,6 +229,7 @@ export default function MediaUploadedItems({
 	const parentRef = useRef<HTMLDivElement>(null);
 	const shouldUseVirtualization = validFiles.length > 20;
 
+	// eslint-disable-next-line react-hooks/incompatible-library
 	const rowVirtualizer = useVirtualizer({
 		count: validFiles.length,
 		getScrollElement: () => parentRef.current,
@@ -277,7 +278,7 @@ export default function MediaUploadedItems({
 						{/* Left section with preview/icon and file info */}
 						<div className="flex min-w-0 flex-1 items-center space-x-3">
 							{/* File preview or icon */}
-							<div className="flex-shrink-0">
+							<div className="shrink-0">
 								{isImage && previewUrl ? (
 									<div className="relative h-12 w-12 rounded-md border">
 										<Image
@@ -339,7 +340,7 @@ export default function MediaUploadedItems({
 									</p>
 									<Badge
 										variant="secondary"
-										className={`flex-shrink-0 text-xs ${getStatusBadge(uploadedFile)}`}
+										className={`shrink-0 text-xs ${getStatusBadge(uploadedFile)}`}
 									>
 										{uploadStatus.charAt(0).toUpperCase() + uploadStatus.slice(1)}
 									</Badge>
@@ -370,7 +371,7 @@ export default function MediaUploadedItems({
 									<div className="mt-1 space-y-1">
 										{errors.map((error: any) => (
 											<div key={error.code} className="flex items-center space-x-1">
-												<AlertCircle className="h-3 w-3 flex-shrink-0 text-red-500" />
+												<AlertCircle className="h-3 w-3 shrink-0 text-red-500" />
 												<span className="text-xs text-red-600 dark:text-red-400">
 													{truncateFileName(error.message, 40)}
 												</span>
@@ -380,7 +381,7 @@ export default function MediaUploadedItems({
 								)}
 								{isAccepted && uploadError && (
 									<div className="mt-1 flex items-center space-x-1">
-										<AlertCircle className="h-3 w-3 flex-shrink-0 text-red-500" />
+										<AlertCircle className="h-3 w-3 shrink-0 text-red-500" />
 										<span className="text-xs text-red-600 dark:text-red-400">{uploadError}</span>
 									</div>
 								)}
@@ -388,7 +389,7 @@ export default function MediaUploadedItems({
 						</div>
 
 						{/* Right section with action buttons */}
-						<div className="ml-3 flex flex-shrink-0 items-center space-x-2">
+						<div className="ml-3 flex shrink-0 items-center space-x-2">
 							{isAccepted && uploadStatus === "failed" && retryUpload && fileId && (
 								<Button
 									variant="ghost"

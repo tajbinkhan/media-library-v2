@@ -5,8 +5,8 @@ import MediaPickerGridView from "@/templates/Media/Picker/MediaPickerGridView";
 // MediaItem is defined globally in Types/Media.d.ts
 
 export interface MediaPickerProps {
-	value?: MediaItem | MediaItem[] | null;
-	onChange?: (value: MediaItem | MediaItem[] | null) => void;
+	value?: MediaItemResponse | MediaItemResponse[] | null;
+	onChange?: (value: MediaItemResponse | MediaItemResponse[] | null) => void;
 	multiple?: boolean;
 	min?: number;
 	max?: number;
@@ -27,9 +27,9 @@ export default function MediaPicker({
 		}
 	};
 
-	const handleRemoveItem = (itemToRemove: MediaItem) => {
+	const handleRemoveItem = (itemToRemove: MediaItemResponse) => {
 		if (multiple && Array.isArray(value)) {
-			const newValue = value.filter(item => item.id !== itemToRemove.id);
+			const newValue = value.filter(item => item.secureUrl !== itemToRemove.secureUrl);
 			onChange?.(newValue.length > 0 ? newValue : null);
 		} else {
 			onChange?.(null);
@@ -37,14 +37,14 @@ export default function MediaPicker({
 	};
 
 	// Convert value to array for consistent handling
-	const selectedItems: MediaItem[] = multiple
+	const selectedItems: MediaItemResponse[] = multiple
 		? Array.isArray(value)
 			? value
 			: value
 				? [value]
 				: []
 		: value
-			? [value as MediaItem]
+			? [value as MediaItemResponse]
 			: [];
 
 	return (
@@ -59,13 +59,13 @@ export default function MediaPicker({
 						className={`grid gap-4 ${
 							multiple
 								? "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-								: "max-w-[120px] grid-cols-1"
+								: "max-w-30 grid-cols-1"
 						}`}
 					>
 						{selectedItems.map(item => (
 							<MediaPreview
-								key={item.id}
-								item={item}
+								key={item.secureUrl}
+								item={item as MediaItem}
 								onRemove={() => handleRemoveItem(item)}
 								className="w-full"
 							/>
@@ -77,7 +77,7 @@ export default function MediaPicker({
 			{/* Media Picker */}
 			<MediaProvider>
 				<MediaPickerGridView
-					selectedValue={value}
+					selectedValue={value as MediaItem | MediaItem[] | null}
 					onSelect={handleMediaSelect}
 					multiple={multiple}
 					min={min}

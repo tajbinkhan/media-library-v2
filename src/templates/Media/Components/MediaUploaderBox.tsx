@@ -1,6 +1,6 @@
 "use client";
 
-import { ACCEPTED_FILE_TYPES, MIME_TO_EXTENSION } from "../Constants/Media.contant";
+import { ACCEPTED_FILE_TYPES, MIME_TO_EXTENSION } from "../Constants/Media.constant";
 import { Loader2, Upload } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 
@@ -111,7 +111,7 @@ export default function MediaUploaderBox({
 				className="flex max-w-4xl flex-col overflow-hidden"
 				onInteractOutside={e => e.preventDefault()}
 			>
-				<DialogHeader className="flex-shrink-0">
+				<DialogHeader className="shrink-0">
 					<DialogTitle className="flex items-center space-x-2">
 						<Upload className="h-5 w-5" />
 						<span>Media Uploader</span>
@@ -173,7 +173,7 @@ export default function MediaUploaderBox({
 					)}
 				</div>
 
-				<DialogFooter className="flex-shrink-0">
+				<DialogFooter className="shrink-0">
 					{/* Show upload button when there are pending files and no uploads in progress */}
 					{pendingCount > 0 && uploadingCount === 0 && (
 						<Button onClick={handleUpload} className="w-full">

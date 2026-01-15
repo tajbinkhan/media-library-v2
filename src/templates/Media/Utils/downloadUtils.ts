@@ -2,9 +2,8 @@
  * Download utilities for media files
  * Provides robust file downloading with fallback methods
  */
+import { MEDIA_API_URL } from "../Constants/Media.constant";
 import { mediaApiRoutes } from "../Routes/MediaRoutes";
-
-import axiosApi from "@/lib/axios-config";
 
 /**
  * Download options interface
@@ -30,7 +29,7 @@ interface DownloadOptions {
  * @param options - Download options
  */
 export async function downloadMediaFile(
-	mediaItem: { id: number; originalFilename: string; secureUrl: string },
+	mediaItem: { originalFilename: string; publicId: string; secureUrl: string },
 	options: DownloadOptions = {}
 ): Promise<void> {
 	const { method = "server", timeout = 30000, onProgress, onStart, onComplete, onError } = options;
@@ -41,7 +40,7 @@ export async function downloadMediaFile(
 		// Method 1: Server-side download endpoint (Recommended)
 		if (method === "server") {
 			try {
-				await downloadViaServer(mediaItem.id, mediaItem.originalFilename, {
+				await downloadViaServer(mediaItem.publicId, mediaItem.originalFilename, {
 					timeout,
 					onProgress,
 					onComplete,
@@ -81,42 +80,75 @@ export async function downloadMediaFile(
 }
 
 /**
- * Download via server endpoint
+ * Download via server endpoint using fetch
  */
 async function downloadViaServer(
-	mediaId: number,
+	publicId: string,
 	filename: string,
 	options: Pick<DownloadOptions, "timeout" | "onProgress" | "onComplete" | "onError">
 ): Promise<void> {
 	const { timeout, onProgress, onComplete } = options;
 
-	const response = await axiosApi.get(mediaApiRoutes.mediaDownload(mediaId), {
-		responseType: "blob",
-		timeout,
-		onDownloadProgress: (progressEvent: any) => {
-			if (progressEvent.total && onProgress) {
-				const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+	// Create AbortController for timeout
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+	try {
+		const downloadUrl = `${MEDIA_API_URL}${mediaApiRoutes.mediaDownload(publicId)}`;
+		const response = await fetch(downloadUrl, {
+			method: "GET",
+			signal: controller.signal,
+			credentials: "include"
+		});
+
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+
+		const contentLength = response.headers.get("content-length");
+		const total = contentLength ? parseInt(contentLength, 10) : 0;
+		let loaded = 0;
+
+		const reader = response.body?.getReader();
+		if (!reader) {
+			throw new Error("Unable to read response body");
+		}
+
+		const chunks: Uint8Array[] = [];
+
+		while (true) {
+			const { done, value } = await reader.read();
+
+			if (done) break;
+
+			chunks.push(value);
+			loaded += value.length;
+
+			if (total && onProgress) {
+				const progress = Math.round((loaded * 100) / total);
 				onProgress(progress);
 			}
 		}
-	});
 
-	// Create blob and download
-	const blob = new Blob([response.data]);
-	const url = window.URL.createObjectURL(blob);
+		// Create blob and download
+		const blob = new Blob(chunks as BlobPart[]);
+		const url = window.URL.createObjectURL(blob);
 
-	const link = document.createElement("a");
-	link.href = url;
-	link.download = filename;
-	link.style.display = "none";
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = filename;
+		link.style.display = "none";
 
-	document.body.appendChild(link);
-	link.click();
-	document.body.removeChild(link);
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
 
-	// Cleanup
-	window.URL.revokeObjectURL(url);
-	onComplete?.();
+		// Cleanup
+		window.URL.revokeObjectURL(url);
+		onComplete?.();
+	} finally {
+		clearTimeout(timeoutId);
+	}
 }
 
 /**

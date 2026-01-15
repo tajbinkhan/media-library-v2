@@ -173,15 +173,17 @@ export default function MediaPreviewModal({ item, onClose, refresh }: MediaPrevi
 						variant="outline"
 						size="sm"
 						onClick={() => handleDownloadFile(item)}
-						disabled={downloadState.isDownloading && downloadState.downloadingFileId === item.id}
+						disabled={
+							downloadState.isDownloading && downloadState.downloadingFileId === item.secureUrl
+						}
 						className="flex items-center gap-2"
 						title={
-							downloadState.isDownloading && downloadState.downloadingFileId === item.id
+							downloadState.isDownloading && downloadState.downloadingFileId === item.secureUrl
 								? `Downloading... ${downloadState.progress}%`
 								: "Download file"
 						}
 					>
-						{downloadState.isDownloading && downloadState.downloadingFileId === item.id ? (
+						{downloadState.isDownloading && downloadState.downloadingFileId === item.secureUrl ? (
 							<Loader2 className="h-4 w-4 animate-spin" />
 						) : (
 							<Download className="h-4 w-4" />

@@ -1,7 +1,13 @@
-export const apiRoute = {
-	csrfToken: "/csrf-token",
-	media: "/media",
-	mediaId: (id: string | number) => `/media/${id}`,
-	mediaUpload: "/media/upload",
-	mediaDownload: (id: string | number) => `/media/${id}/download`
+export const route = {
+	public: {},
+	private: {},
+	protected: {}
 };
+
+export const apiRoute = {
+	csrf: "/csrf"
+} as const;
+
+const appRoutePrefix = process.env.NEXT_PUBLIC_FRONTEND_URL;
+
+export { appRoutePrefix };

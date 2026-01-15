@@ -4,8 +4,6 @@ import { Loader2, Trash2 } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
 
-import axiosApi from "@/lib/axios-config";
-
 import {
 	AlertDialog,
 	AlertDialogCancel,
@@ -17,7 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 
-import { mediaApiRoutes } from "@/templates/Media/Routes/MediaRoutes";
+import { useMediaDeleteMutation } from "@/templates/Media/Redux/MediaAPISlice";
 
 // ============================================================================
 // Component
@@ -25,23 +23,21 @@ import { mediaApiRoutes } from "@/templates/Media/Routes/MediaRoutes";
 
 export default function MediaDeleteAlert({ item, onClose, onSuccess }: MediaDeleteAlertProps) {
 	const [isPending, startTransition] = useTransition();
+	const [deleteMedia] = useMediaDeleteMutation();
 
 	const handleDelete = () => {
 		if (!item) return;
 
 		startTransition(async () => {
-			await axiosApi
-				.delete(mediaApiRoutes.mediaId(item.id))
-				.then(() => {
-					toast.success("Media file deleted successfully");
-					onSuccess?.();
-					onClose();
-				})
-				.catch(error => {
-					const errorMessage =
-						error.response?.data?.message || error.message || "Failed to delete media file";
-					toast.error(errorMessage);
-				});
+			try {
+				await deleteMedia(item.publicId).unwrap();
+				toast.success("Media file deleted successfully");
+				onSuccess?.();
+				onClose();
+			} catch (error: any) {
+				const errorMessage = error?.data?.message || error.message || "Failed to delete media file";
+				toast.error(errorMessage);
+			}
 		});
 	};
 
@@ -56,21 +52,24 @@ export default function MediaDeleteAlert({ item, onClose, onSuccess }: MediaDele
 						Delete Media File
 					</AlertDialogTitle>
 					<AlertDialogDescription className="space-y-2">
-						<div>Are you sure you want to delete this media file?</div>
-						<div className="rounded bg-gray-50 p-3 dark:bg-gray-800">
-							<div className="font-medium text-gray-900 dark:text-gray-100">
+						<span className="block">Are you sure you want to delete this media file?</span>
+
+						<span className="block rounded bg-gray-50 p-3 dark:bg-gray-800">
+							<span className="block font-medium text-gray-900 dark:text-gray-100">
 								{item.originalFilename}
-							</div>
+							</span>
+
 							{item.altText && (
-								<div className="text-sm text-gray-600 dark:text-gray-400">
+								<span className="block text-sm text-gray-600 dark:text-gray-400">
 									Alt text: {item.altText}
-								</div>
+								</span>
 							)}
-						</div>
-						<div className="text-sm text-red-600 dark:text-red-400">
+						</span>
+
+						<span className="block text-sm text-red-600 dark:text-red-400">
 							This action cannot be undone. The file will be permanently removed from your media
 							library.
-						</div>
+						</span>
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>

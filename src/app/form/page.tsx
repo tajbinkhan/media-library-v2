@@ -1,35 +1,52 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage
-} from "@/components/ui/form";
+	Field,
+	FieldDescription,
+	FieldError,
+	FieldGroup,
+	FieldLabel,
+	FieldSet
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 
 import MediaPicker from "@/templates/Media/MediaPicker";
 import { validateMediaArray, validateMediaItem } from "@/templates/Media/Validators/Media.schema";
-import { validateString } from "@/validators/commonRules";
+import { validateString } from "@/validators/commonRule";
 
 const formSchema = z.object({
 	name: validateString("Name"),
-	avatar: validateMediaItem("Avatar", false), // Single media (optional)
-	gallery: validateMediaArray("Gallery", true, 5, 5), // Multiple media (max 5, optional)
-	featuredImage: validateMediaItem("Featured Image", true) // Single media (required)
+	avatar: validateMediaItem({
+		name: "Avatar",
+		required: false
+	}), // Single media (optional)
+	gallery: validateMediaArray({
+		name: "Gallery",
+		required: false,
+		maxItems: 5
+	}), // Multiple media (max 5, optional)
+	featuredImage: validateMediaItem({
+		name: "Featured Image",
+		required: true
+	}) // Single media (required)
 });
 
 type FormSchema = z.infer<typeof formSchema>;
 
 export default function FormPage() {
-	const form = useForm<FormSchema>({
+	const {
+		control,
+		handleSubmit,
+		reset,
+		formState: { errors }
+	} = useForm<FormSchema>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			name: "",
@@ -39,78 +56,121 @@ export default function FormPage() {
 		}
 	});
 
+	const onSubmit = (data: FormSchema) => {
+		console.log("Form submitted:", data);
+	};
+
 	return (
-		<div className="mx-auto mt-8 max-w-4xl rounded-lg bg-white p-8 shadow-md">
-			<h1 className="mb-8 text-3xl font-bold">Sample Form with Media Picker</h1>
-			<Form {...form}>
-				<form onSubmit={form.handleSubmit(data => console.log(data))}>
-					<div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-						<div className="space-y-6">
-							<FormField
-								control={form.control}
+		<div className="container mx-auto max-w-6xl px-4 py-8">
+			<div className="mb-8 space-y-2">
+				<h1 className="text-4xl font-bold tracking-tight">Media Library Form</h1>
+				<p className="text-muted-foreground text-lg">
+					A comprehensive form showcasing the media picker component with various configurations
+				</p>
+			</div>
+
+			<Card className="p-8">
+				<form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+					<FieldSet>
+						<FieldGroup>
+							{/* Name Field */}
+							<Controller
+								control={control}
 								name="name"
 								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Name</FormLabel>
-										<FormControl>
-											<Input placeholder="Name" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
+									<Field data-invalid={!!errors.name}>
+										<FieldLabel htmlFor="name">Full Name</FieldLabel>
+										<Input
+											id="name"
+											placeholder="Enter your full name"
+											{...field}
+											aria-invalid={!!errors.name}
+										/>
+										<FieldDescription>This will be displayed as your public name</FieldDescription>
+										<FieldError errors={[errors.name]} />
+									</Field>
 								)}
 							/>
 
-							<FormField
-								control={form.control}
-								name="avatar"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Avatar (Single Selection)</FormLabel>
-										<FormControl>
-											<MediaPicker
-												value={field.value}
-												onChange={field.onChange}
-												multiple={false}
-												min={0}
-												max={1}
-												placeholder="Select an avatar"
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+							<Separator className="my-6" />
 
-							<FormField
-								control={form.control}
-								name="featuredImage"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Featured Image (Required)</FormLabel>
-										<FormControl>
-											<MediaPicker
-												value={field.value}
-												onChange={field.onChange}
-												multiple={false}
-												min={1}
-												max={1}
-												placeholder="Select a featured image"
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
+							{/* Single Media Fields */}
+							<div className="space-y-6">
+								<div>
+									<h2 className="text-xl font-semibold">Profile Media</h2>
+									<p className="text-muted-foreground text-sm">
+										Upload your avatar and featured image
+									</p>
+								</div>
 
-						<div className="space-y-6">
-							<FormField
-								control={form.control}
-								name="gallery"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Gallery (Multiple Selection - Max 5)</FormLabel>
-										<FormControl>
+								<div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+									{/* Avatar Field */}
+									<Controller
+										control={control}
+										name="avatar"
+										render={({ field }) => (
+											<Field data-invalid={!!errors.avatar}>
+												<FieldLabel htmlFor="avatar">Avatar</FieldLabel>
+												<MediaPicker
+													value={field.value}
+													onChange={field.onChange}
+													multiple={false}
+													min={0}
+													max={1}
+													placeholder="Select an avatar"
+												/>
+												<FieldDescription>
+													Optional profile picture (recommended 1:1 aspect ratio)
+												</FieldDescription>
+												<FieldError errors={[errors.avatar]} />
+											</Field>
+										)}
+									/>
+
+									{/* Featured Image Field */}
+									<Controller
+										control={control}
+										name="featuredImage"
+										render={({ field }) => (
+											<Field data-invalid={!!errors.featuredImage}>
+												<FieldLabel htmlFor="featuredImage">
+													Featured Image <span className="text-destructive">*</span>
+												</FieldLabel>
+												<MediaPicker
+													value={field.value}
+													onChange={field.onChange}
+													multiple={false}
+													min={1}
+													max={1}
+													placeholder="Select a featured image"
+												/>
+												<FieldDescription>
+													This image will be displayed prominently (required)
+												</FieldDescription>
+												<FieldError errors={[errors.featuredImage]} />
+											</Field>
+										)}
+									/>
+								</div>
+							</div>
+
+							<Separator className="my-6" />
+
+							{/* Gallery Field */}
+							<div className="space-y-4">
+								<div>
+									<h2 className="text-xl font-semibold">Gallery</h2>
+									<p className="text-muted-foreground text-sm">
+										Upload multiple images for your gallery
+									</p>
+								</div>
+
+								<Controller
+									control={control}
+									name="gallery"
+									render={({ field }) => (
+										<Field data-invalid={!!errors.gallery}>
+											<FieldLabel htmlFor="gallery">Image Gallery</FieldLabel>
 											<MediaPicker
 												value={field.value}
 												onChange={field.onChange}
@@ -119,22 +179,29 @@ export default function FormPage() {
 												max={5}
 												placeholder="Select up to 5 images for the gallery"
 											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
-					</div>
+											<FieldDescription>
+												Upload up to 5 images to showcase in your gallery (optional)
+											</FieldDescription>
+											<FieldError errors={[errors.gallery]} />
+										</Field>
+									)}
+								/>
+							</div>
+						</FieldGroup>
+					</FieldSet>
 
-					<div className="mt-8 flex justify-end gap-4">
-						<Button type="button" variant="outline" onClick={() => form.reset()}>
+					<Separator />
+
+					<div className="flex flex-col gap-4 sm:flex-row sm:justify-end">
+						<Button type="button" variant="outline" onClick={() => reset()} className="sm:w-auto">
 							Reset Form
 						</Button>
-						<Button type="submit">Submit Form</Button>
+						<Button type="submit" className="sm:w-auto">
+							Submit Form
+						</Button>
 					</div>
 				</form>
-			</Form>
+			</Card>
 		</div>
 	);
 }
