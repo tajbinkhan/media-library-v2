@@ -39,7 +39,7 @@ export default function LoginTemplate() {
 							<div className="from-primary/10 to-primary/5 ring-primary/10 flex size-10 items-center justify-center rounded-lg bg-linear-to-br ring-1">
 								<FaHandHoldingDollar className="text-primary h-5 w-5" />
 							</div>
-							<span className="text-foreground text-2xl font-bold">Lenbow</span>
+							<span className="text-foreground text-2xl font-bold">Webphics Media Library</span>
 						</div>
 						<h1 className="text-foreground text-4xl font-bold tracking-tight">Welcome back</h1>
 						<p className="text-muted-foreground text-base font-medium">
