@@ -1,7 +1,8 @@
 "use client";
 
 import { useTransition } from "react";
-import { FaGoogle, FaHandHoldingDollar } from "react-icons/fa6";
+import { FaGoogle } from "react-icons/fa6";
+import { MdOutlinePermMedia } from "react-icons/md";
 
 import { LoadingButton } from "@/components/ui/loading-button";
 
@@ -37,9 +38,9 @@ export default function LoginTemplate() {
 					<div className="flex flex-col items-center space-y-3 text-center">
 						<div className="mb-4 flex items-center gap-3">
 							<div className="from-primary/10 to-primary/5 ring-primary/10 flex size-10 items-center justify-center rounded-lg bg-linear-to-br ring-1">
-								<FaHandHoldingDollar className="text-primary h-5 w-5" />
+								<MdOutlinePermMedia className="text-primary h-5 w-5" />
 							</div>
-							<span className="text-foreground text-2xl font-bold">Webphics Media Library</span>
+							<span className="text-foreground text-2xl font-bold">Media Library</span>
 						</div>
 						<h1 className="text-foreground text-4xl font-bold tracking-tight">Welcome back</h1>
 						<p className="text-muted-foreground text-base font-medium">
