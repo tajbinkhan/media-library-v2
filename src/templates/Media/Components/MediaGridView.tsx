@@ -76,8 +76,7 @@ export default function MediaGridView({ onUpload, className = "" }: MediaGridVie
 	const mediaItems = useMemo(() => response?.data || [], [response?.data]);
 	const filteredItems = useMemo(() => {
 		return mediaItems.filter(
-			item =>
-				!searchQuery || item.originalFilename?.toLowerCase().includes(searchQuery.toLowerCase())
+			item => !searchQuery || item.filename?.toLowerCase().includes(searchQuery.toLowerCase())
 		);
 	}, [mediaItems, searchQuery]);
 

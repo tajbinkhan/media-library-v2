@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
+import { Suspense } from "react";
 
-import Navigation from "@/components/navigation";
+import Loader from "@/components/ui/loader";
 import { Toaster } from "@/components/ui/sonner";
 
 import "./globals.css";
+import { RedirectProvider } from "@/providers/RedirectProvider";
 import ReduxProvider from "@/providers/ReduxProvider";
 
 const poppins = Poppins({
@@ -20,13 +22,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<GlobalLayoutProps>) {
 	return (
-		<html lang="en" className={poppins.className}>
-			<body className="antialiased">
-				<ReduxProvider>
-					<Navigation />
-					{children}
-					<Toaster position="top-right" richColors closeButton />
-				</ReduxProvider>
+		<html lang="en" className={poppins.className} suppressHydrationWarning>
+			<body className="antialiased" suppressHydrationWarning>
+				<Suspense fallback={<Loader />}>
+					<ReduxProvider>
+						<RedirectProvider>
+							{children}
+							<Toaster position="top-right" richColors closeButton />
+						</RedirectProvider>
+					</ReduxProvider>
+				</Suspense>
 			</body>
 		</html>
 	);

@@ -38,7 +38,7 @@ export default function MediaPreview({ item, onRemove, className = "" }: MediaPr
 				{isImage && item.secureUrl ? (
 					<Image
 						src={item.secureUrl}
-						alt={item.altText || item.originalFilename || "Selected media"}
+						alt={item.altText || item.filename || "Selected media"}
 						fill
 						className="rounded-xl object-cover"
 						sizes="120px"
@@ -51,10 +51,10 @@ export default function MediaPreview({ item, onRemove, className = "" }: MediaPr
 						</div>
 						<div className="text-center">
 							<div className="mb-1 text-xs font-medium text-gray-900 dark:text-gray-100">
-								{getFileExtension(item.originalFilename || "")}
+								{getFileExtension(item.filename || "")}
 							</div>
 							<p className="max-w-full truncate text-xs text-gray-500 dark:text-gray-400">
-								{item.originalFilename}
+								{item.filename}
 							</p>
 						</div>
 					</div>

@@ -19,9 +19,9 @@ import { useCallback, useMemo, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 import { useMedia } from "@/templates/Media/Contexts/MediaContext";
 
@@ -329,7 +329,7 @@ export default function MediaUploadedItems({
 							<div className="min-w-0 flex-1">
 								<div className="mb-1 flex items-center space-x-2">
 									<p
-										className={`text-sm font-medium ${
+										className={`max-w-30 truncate text-sm font-medium ${
 											isAccepted
 												? "text-green-900 dark:text-green-100"
 												: "text-red-900 dark:text-red-100"
@@ -476,70 +476,40 @@ export default function MediaUploadedItems({
 			</div>
 
 			{/* Single unified file list */}
-			<Card className="pb-5">
-				<CardHeader>
-					<CardTitle className="flex flex-wrap items-center space-x-2">
+			<Separator />
+			<div className="mt-4 space-y-3">
+				<div className="flex flex-wrap items-center gap-2">
+					<div className="flex items-center space-x-2">
 						<File className="h-5 w-5" />
-						<span>Files ({validFiles.length})</span>
-						{acceptedFiles.length > 0 && (
-							<Badge
-								variant="secondary"
-								className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200"
-							>
-								<Check className="mr-1 h-3 w-3" />
-								{acceptedFiles.length} Accepted
-							</Badge>
-						)}
-						{rejectedFiles.length > 0 && (
-							<Badge
-								variant="secondary"
-								className="bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200"
-							>
-								<X className="mr-1 h-3 w-3" />
-								{rejectedFiles.length} Rejected
-							</Badge>
-						)}
-					</CardTitle>
-					<CardDescription>Files ready for upload and rejected files</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<ScrollArea ref={parentRef} className="h-48 w-full">
-						{shouldUseVirtualization ? (
-							// Virtualized rendering for large lists
-							<div
-								style={{
-									height: `${rowVirtualizer.getTotalSize()}px`,
-									width: "100%",
-									position: "relative"
-								}}
-							>
-								{rowVirtualizer.getVirtualItems().map(virtualItem => (
-									<div
-										key={virtualItem.index}
-										style={{
-											position: "absolute",
-											top: 0,
-											left: 0,
-											width: "100%",
-											height: `${virtualItem.size}px`,
-											transform: `translateY(${virtualItem.start}px)`,
-											padding: "0.25rem"
-										}}
-									>
-										{renderFileItem(validFiles[virtualItem.index], virtualItem.index)}
-									</div>
-								))}
-							</div>
-						) : (
-							// Simple rendering for smaller lists
-							<div className="space-y-3 p-1">
-								{validFiles.map((item, index) => renderFileItem(item, index))}
-							</div>
-						)}
-						<ScrollBar orientation="vertical" />
-					</ScrollArea>
-				</CardContent>
-			</Card>
+						<span className="font-semibold">Files ({validFiles.length})</span>
+					</div>
+					{acceptedFiles.length > 0 && (
+						<Badge className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200">
+							<Check className="mr-1 h-3 w-3" />
+							{acceptedFiles.length} Accepted
+						</Badge>
+					)}
+					{rejectedFiles.length > 0 && (
+						<Badge className="bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200">
+							<X className="mr-1 h-3 w-3" />
+							{rejectedFiles.length} Rejected
+						</Badge>
+					)}
+				</div>
+				<p className="text-sm text-slate-600 dark:text-slate-400">
+					Files ready for upload and rejected files
+				</p>
+				<ScrollArea ref={parentRef} className="h-48 w-full rounded border">
+					{validFiles.length > 0 ? (
+						<div className="space-y-1 p-2">
+							{validFiles.map((item, index) => renderFileItem(item, index))}
+						</div>
+					) : (
+						<div className="flex h-48 items-center justify-center text-slate-500">No files</div>
+					)}
+					<ScrollBar orientation="vertical" />
+				</ScrollArea>
+			</div>
 		</div>
 	);
 }

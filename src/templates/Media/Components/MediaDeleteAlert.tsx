@@ -56,7 +56,7 @@ export default function MediaDeleteAlert({ item, onClose, onSuccess }: MediaDele
 
 						<span className="block rounded bg-gray-50 p-3 dark:bg-gray-800">
 							<span className="block font-medium text-gray-900 dark:text-gray-100">
-								{item.originalFilename}
+								{item.filename}
 							</span>
 
 							{item.altText && (

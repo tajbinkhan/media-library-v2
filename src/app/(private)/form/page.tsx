@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import z from "zod";
 
@@ -41,6 +42,9 @@ const formSchema = z.object({
 type FormSchema = z.infer<typeof formSchema>;
 
 export default function FormPage() {
+	const [submittedData, setSubmittedData] = useState<FormSchema | null>(null);
+	const submittedDataRef = useRef<HTMLDivElement>(null);
+
 	const {
 		control,
 		handleSubmit,
@@ -58,7 +62,17 @@ export default function FormPage() {
 
 	const onSubmit = (data: FormSchema) => {
 		console.log("Form submitted:", data);
+		setSubmittedData(data);
 	};
+
+	useEffect(() => {
+		if (submittedData && submittedDataRef.current) {
+			submittedDataRef.current.scrollIntoView({
+				behavior: "smooth",
+				block: "start"
+			});
+		}
+	}, [submittedData]);
 
 	return (
 		<div className="container mx-auto max-w-6xl px-4 py-8">
@@ -202,6 +216,24 @@ export default function FormPage() {
 					</div>
 				</form>
 			</Card>
+
+			{/* Display Submitted Data */}
+			{submittedData && (
+				<Card ref={submittedDataRef} className="mt-6 p-6">
+					<div className="space-y-4">
+						<div className="flex items-center justify-between">
+							<h2 className="text-2xl font-semibold">Submitted Data</h2>
+							<Button variant="outline" size="sm" onClick={() => setSubmittedData(null)}>
+								Clear
+							</Button>
+						</div>
+						<Separator />
+						<pre className="bg-muted overflow-auto rounded-lg p-4 text-sm">
+							<code>{JSON.stringify(submittedData, null, 2)}</code>
+						</pre>
+					</div>
+				</Card>
+			)}
 		</div>
 	);
 }

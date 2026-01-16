@@ -1,16 +1,23 @@
 import { configureStore } from "@reduxjs/toolkit";
 
+import {
+	authenticationApiReducer,
+	authenticationApiSlice
+} from "@/templates/Authentication/Login/Redux/AuthenticationAPISlice";
+import { authReducer } from "@/templates/Authentication/Login/Redux/AuthenticationSlice";
 import { mediaApiReducer, mediaApiSlice } from "@/templates/Media/Redux/MediaAPISlice";
 
 export const makeStore = () => {
 	return configureStore({
 		reducer: {
+			authReducer,
+			authenticationApiReducer,
 			mediaApiReducer
 		},
 		middleware: getDefaultMiddleware =>
 			getDefaultMiddleware({
 				serializableCheck: false
-			}).concat([mediaApiSlice.middleware])
+			}).concat([authenticationApiSlice.middleware, mediaApiSlice.middleware])
 	});
 };
 

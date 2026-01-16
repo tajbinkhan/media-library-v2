@@ -3,8 +3,10 @@ import MediaTemplate from "@/templates/Media/MediaTemplate";
 
 export default function Page() {
 	return (
-		<MediaProvider>
-			<MediaTemplate />
-		</MediaProvider>
+		<div className="px-5">
+			<MediaProvider>
+				<MediaTemplate />
+			</MediaProvider>
+		</div>
 	);
 }

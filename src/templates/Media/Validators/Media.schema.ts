@@ -26,7 +26,7 @@ export const mediaUpdateSchema = z.object({
 export const validateMediaItem = ({ name, required = false }: ValidateMediaItemOptions) => {
 	const schema = z.object(
 		{
-			originalFilename: validateString("Original Filename"),
+			filename: validateString("Original Filename"),
 			secureUrl: validateString("Secure URL"),
 			altText: validateString("Alt Text").optional().nullable(),
 			mimeType: validateString("MIME Type")
@@ -60,7 +60,7 @@ export const validateMediaArray = ({
 	let schema = z.array(
 		z.object(
 			{
-				originalFilename: validateString("Original Filename"),
+				filename: validateString("Original Filename"),
 				secureUrl: validateString("Secure URL"),
 				altText: validateString("Alt Text").optional().nullable(),
 				mimeType: validateString("MIME Type")

@@ -2,15 +2,13 @@
  * Download utilities for media files
  * Provides robust file downloading with fallback methods
  */
-import { MEDIA_API_URL } from "../Constants/Media.constant";
-import { mediaApiRoutes } from "../Routes/MediaRoutes";
 
 /**
  * Download options interface
  */
 interface DownloadOptions {
 	/** Preferred download method */
-	method?: "server" | "blob" | "direct";
+	method?: "blob" | "direct";
 	/** Timeout in milliseconds */
 	timeout?: number;
 	/** Callback for download progress */
@@ -29,34 +27,18 @@ interface DownloadOptions {
  * @param options - Download options
  */
 export async function downloadMediaFile(
-	mediaItem: { originalFilename: string; publicId: string; secureUrl: string },
+	mediaItem: { filename: string; publicId: string; secureUrl: string },
 	options: DownloadOptions = {}
 ): Promise<void> {
-	const { method = "server", timeout = 30000, onProgress, onStart, onComplete, onError } = options;
+	const { method = "blob", timeout = 30000, onProgress, onStart, onComplete, onError } = options;
 
 	try {
 		onStart?.();
 
-		// Method 1: Server-side download endpoint (Recommended)
-		if (method === "server") {
+		// Method 1: Blob download (Fallback)
+		if (method === "blob") {
 			try {
-				await downloadViaServer(mediaItem.publicId, mediaItem.originalFilename, {
-					timeout,
-					onProgress,
-					onComplete,
-					onError
-				});
-				return;
-			} catch (error) {
-				console.warn("Server download failed, trying blob method:", error);
-				// Fallback to blob method
-			}
-		}
-
-		// Method 2: Blob download (Fallback)
-		if (method === "blob" || method === "server") {
-			try {
-				await downloadViaBlob(mediaItem.secureUrl, mediaItem.originalFilename, {
+				await downloadViaBlob(mediaItem.secureUrl, mediaItem.filename, {
 					timeout,
 					onProgress,
 					onComplete,
@@ -69,85 +51,13 @@ export async function downloadMediaFile(
 			}
 		}
 
-		// Method 3: Direct download (Last resort)
-		downloadViaDirect(mediaItem.secureUrl, mediaItem.originalFilename);
+		// Method 2: Direct download (Last resort)
+		downloadViaDirect(mediaItem.secureUrl, mediaItem.filename);
 		onComplete?.();
 	} catch (error) {
 		const downloadError = error instanceof Error ? error : new Error("Download failed");
 		onError?.(downloadError);
 		throw downloadError;
-	}
-}
-
-/**
- * Download via server endpoint using fetch
- */
-async function downloadViaServer(
-	publicId: string,
-	filename: string,
-	options: Pick<DownloadOptions, "timeout" | "onProgress" | "onComplete" | "onError">
-): Promise<void> {
-	const { timeout, onProgress, onComplete } = options;
-
-	// Create AbortController for timeout
-	const controller = new AbortController();
-	const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-	try {
-		const downloadUrl = `${MEDIA_API_URL}${mediaApiRoutes.mediaDownload(publicId)}`;
-		const response = await fetch(downloadUrl, {
-			method: "GET",
-			signal: controller.signal,
-			credentials: "include"
-		});
-
-		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
-
-		const contentLength = response.headers.get("content-length");
-		const total = contentLength ? parseInt(contentLength, 10) : 0;
-		let loaded = 0;
-
-		const reader = response.body?.getReader();
-		if (!reader) {
-			throw new Error("Unable to read response body");
-		}
-
-		const chunks: Uint8Array[] = [];
-
-		while (true) {
-			const { done, value } = await reader.read();
-
-			if (done) break;
-
-			chunks.push(value);
-			loaded += value.length;
-
-			if (total && onProgress) {
-				const progress = Math.round((loaded * 100) / total);
-				onProgress(progress);
-			}
-		}
-
-		// Create blob and download
-		const blob = new Blob(chunks as BlobPart[]);
-		const url = window.URL.createObjectURL(blob);
-
-		const link = document.createElement("a");
-		link.href = url;
-		link.download = filename;
-		link.style.display = "none";
-
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-
-		// Cleanup
-		window.URL.revokeObjectURL(url);
-		onComplete?.();
-	} finally {
-		clearTimeout(timeoutId);
 	}
 }
 

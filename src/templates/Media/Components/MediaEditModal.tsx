@@ -35,7 +35,7 @@ export default function MediaEditModal({ item, onClose, onSave, onCancel }: Medi
 	const form = useForm<MediaUpdateSchemaType>({
 		resolver: zodResolver(mediaUpdateSchema),
 		defaultValues: {
-			name: item?.originalFilename || "",
+			name: item?.filename || "",
 			altText: item?.altText || ""
 		}
 	});
@@ -44,7 +44,7 @@ export default function MediaEditModal({ item, onClose, onSave, onCancel }: Medi
 		if (item) {
 			form.reset({
 				// split the extension from the filename
-				name: item.originalFilename.split(".").slice(0, -1).join(".") || "",
+				name: item.filename.split(".").slice(0, -1).join(".") || "",
 				altText: item.altText || ""
 			});
 		}
@@ -54,7 +54,7 @@ export default function MediaEditModal({ item, onClose, onSave, onCancel }: Medi
 		startTransition(async () => {
 			const payload = {
 				...data,
-				name: `${data.name}.${item?.originalFilename.split(".").pop() || ""}`
+				name: `${data.name}.${item?.filename.split(".").pop() || ""}`
 			};
 			try {
 				await updateMedia({

@@ -6,7 +6,7 @@
  * Form data for editing media items
  */
 interface EditForm {
-	originalFilename: string;
+	filename: string;
 	altText: string;
 	description: string;
 }
@@ -360,8 +360,8 @@ interface UploadEvent {
 interface MediaItem {
 	/** Public identifier for the media item */
 	publicId: string;
-	/** Original filename */
-	originalFilename: string;
+	/** filename */
+	filename: string;
 	/** MIME type of the file */
 	mimeType: string;
 	/** Secure URL to access the media file */
@@ -384,7 +384,7 @@ interface MediaItem {
  */
 interface MediaItemResponse {
 	/** Original filename */
-	originalFilename: string;
+	filename: string;
 	/** Secure URL to access the media file */
 	secureUrl: string;
 	/** Alternative text for accessibility */

@@ -2,11 +2,11 @@
 
 import { useMediaDownload } from "../Hooks/useMediaDownload";
 import {
+	Calendar,
 	Check,
 	Copy,
 	Download,
 	Edit3,
-	Eye,
 	File,
 	FileImage,
 	FileText,
@@ -193,7 +193,7 @@ export default function MediaPickerSingleView({
 							<>
 								<Image
 									src={item.secureUrl}
-									alt={item.altText || item.originalFilename || "Media file"}
+									alt={item.altText || item.filename || "Media file"}
 									fill
 									className="object-cover transition-all duration-500 group-hover:scale-105"
 									sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, (max-width: 1280px) 20vw, 16.67vw"
@@ -229,19 +229,8 @@ export default function MediaPickerSingleView({
 						)}
 
 						{/* Quick Actions Overlay */}
-						<div className="absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-300 group-hover:opacity-100">
-							<div className="flex gap-2">
-								<Button
-									size="sm"
-									variant="secondary"
-									className="h-8 w-8 bg-white/90 p-0 hover:bg-white dark:bg-gray-900/90 dark:hover:bg-gray-900"
-									onClick={(e: React.MouseEvent) => {
-										e.stopPropagation();
-										handleItemPreview();
-									}}
-								>
-									<Eye className="h-4 w-4" />
-								</Button>
+						<div className="absolute top-3 right-3 opacity-0 transition-all duration-200 group-hover:opacity-100">
+							<div className="flex flex-col gap-2">
 								<Button
 									size="sm"
 									variant="secondary"
@@ -283,23 +272,19 @@ export default function MediaPickerSingleView({
 										<Download className="h-4 w-4" />
 									)}
 								</Button>
+								<Button
+									variant="destructive"
+									size="sm"
+									className="h-8 w-8 bg-white/90 p-0 shadow-lg hover:bg-white dark:bg-gray-900/90 dark:hover:bg-gray-900"
+									onClick={(e: React.MouseEvent) => {
+										e.stopPropagation();
+										handleDeleteStart();
+									}}
+									title="Delete file"
+								>
+									<Trash2 className="h-4 w-4" />
+								</Button>
 							</div>
-						</div>
-
-						{/* Delete Button */}
-						<div className="absolute top-3 right-3 opacity-0 transition-all duration-200 group-hover:opacity-100">
-							<Button
-								variant="destructive"
-								size="sm"
-								className="h-8 w-8 p-0 shadow-lg"
-								onClick={(e: React.MouseEvent) => {
-									e.stopPropagation();
-									handleDeleteStart();
-								}}
-								title="Delete file"
-							>
-								<Trash2 className="h-4 w-4" />
-							</Button>
 						</div>
 
 						{/* File type badge for non-images */}
@@ -321,9 +306,9 @@ export default function MediaPickerSingleView({
 							<div className="min-w-0 flex-1">
 								<h4
 									className="truncate text-sm font-semibold text-gray-900 dark:text-gray-100"
-									title={item.originalFilename || "Unknown file"}
+									title={item.filename || "Unknown file"}
 								>
-									{item.originalFilename || "Unknown file"}
+									{item.filename || "Unknown file"}
 								</h4>
 								{item.altText && (
 									<p
@@ -349,7 +334,7 @@ export default function MediaPickerSingleView({
 							</Button>
 						</div>
 
-						<div className="flex items-center justify-between text-xs">
+						<div className="flex flex-wrap items-center justify-between gap-2 text-xs">
 							<div className="flex flex-col gap-1">
 								<span className="font-medium text-gray-600 dark:text-gray-400">
 									{formatFileSize(item.fileSize)}
@@ -360,10 +345,10 @@ export default function MediaPickerSingleView({
 									</span>
 								)} */}
 							</div>
-							{/* <span className="flex items-center text-gray-400 dark:text-gray-500">
+							<span className="flex items-center text-gray-400 dark:text-gray-500">
 								<Calendar className="mr-1 h-3 w-3" />
 								{formatDate(item.createdAt)}
-							</span> */}
+							</span>
 						</div>
 					</div>
 				</CardContent>

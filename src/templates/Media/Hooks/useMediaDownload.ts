@@ -48,7 +48,7 @@ export function useMediaDownload(): UseMediaDownloadReturn {
 			await downloadMediaFile(
 				{
 					publicId: mediaItem.publicId,
-					originalFilename: mediaItem.originalFilename,
+					filename: mediaItem.filename,
 					secureUrl: mediaItem.secureUrl
 				},
 				{

@@ -1,5 +1,5 @@
 export const MEDIA_API_URL = process.env.NEXT_PUBLIC_MEDIA_API_URL || "http://localhost:5000";
-export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+export const MAX_FILE_SIZE = 2 * 1024 * 1024; // 10MB
 export const MAX_FILES = 20;
 export const MAX_CONCURRENT_UPLOADS = 3;
 export const ACCEPTED_FILE_TYPES = {

@@ -147,12 +147,16 @@ export default function MediaPreviewModal({ item, onClose, refresh }: MediaPrevi
 			<DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle className="flex items-center justify-between">
-						<span className="truncate pr-4">{item.originalFilename}</span>
+						<span className="max-w-60 truncate pr-4" title={item.filename}>
+							{item.filename}
+						</span>
 					</DialogTitle>
-					<DialogDescription>
-						{formatFileSize(item.fileSize)} • {getFileTypeLabel(item.mimeType)} •
-						{item.width && item.height && ` ${item.width} × ${item.height} •`}
-						{formatDate(item.createdAt)}
+					<DialogDescription asChild>
+						<div className="flex flex-wrap">
+							{formatFileSize(item.fileSize)} • {getFileTypeLabel(item.mimeType)} •
+							{item.width && item.height && ` ${item.width} × ${item.height} • `}
+							{formatDate(item.createdAt)}
+						</div>
 					</DialogDescription>
 				</DialogHeader>
 
@@ -203,13 +207,13 @@ export default function MediaPreviewModal({ item, onClose, refresh }: MediaPrevi
 
 				<div className="mt-4">
 					{isImage ? (
-						<div className="relative max-h-[60vh] w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
+						<div className="relative max-h-60 w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
 							<Image
 								src={item.secureUrl}
-								alt={item.altText || item.originalFilename}
+								alt={item.altText || item.filename}
 								width={item.width || 800}
 								height={item.height || 600}
-								className="h-auto max-h-[60vh] w-full object-contain"
+								className="h-auto max-h-60 w-full object-contain"
 								unoptimized={true}
 								priority
 							/>
@@ -236,8 +240,7 @@ export default function MediaPreviewModal({ item, onClose, refresh }: MediaPrevi
 									Filename
 								</Label>
 								<p className="text-sm text-gray-900 dark:text-gray-100">
-									{item.originalFilename.substring(0, 20) +
-										(item.originalFilename.length > 20 ? "..." : "")}
+									{item.filename.substring(0, 20) + (item.filename.length > 20 ? "..." : "")}
 								</p>
 							</div>
 							{item.altText && (
@@ -248,6 +251,14 @@ export default function MediaPreviewModal({ item, onClose, refresh }: MediaPrevi
 									<p className="text-sm text-gray-900 dark:text-gray-100">{item.altText}</p>
 								</div>
 							)}
+							<div>
+								<Label className="text-sm font-medium text-gray-500 dark:text-gray-400">
+									Created
+								</Label>
+								<p className="text-sm text-gray-900 dark:text-gray-100">
+									{formatDate(item.createdAt)}
+								</p>
+							</div>
 						</div>
 						<div className="space-y-3">
 							<div>
@@ -268,14 +279,6 @@ export default function MediaPreviewModal({ item, onClose, refresh }: MediaPrevi
 									</p>
 								</div>
 							)}
-							<div>
-								<Label className="text-sm font-medium text-gray-500 dark:text-gray-400">
-									Created
-								</Label>
-								<p className="text-sm text-gray-900 dark:text-gray-100">
-									{formatDate(item.createdAt)}
-								</p>
-							</div>
 						</div>
 					</div>
 				</div>

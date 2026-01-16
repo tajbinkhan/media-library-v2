@@ -3,9 +3,16 @@
 import { FileEdit, LayoutGrid } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LuLogOut } from "react-icons/lu";
+
+import { Button } from "@/components/ui/button";
+
+import useAuth from "@/hooks/use-auth";
 
 export default function Navigation() {
 	const pathname = usePathname();
+
+	const { handleLogout } = useAuth();
 
 	const navItems = [
 		{
@@ -47,6 +54,17 @@ export default function Navigation() {
 								</Link>
 							);
 						})}
+
+						{/* Logout button */}
+						<Button
+							onClick={handleLogout}
+							variant={"destructive"}
+							title="Logout"
+							className="h-auto px-4 py-2"
+						>
+							<LuLogOut />
+							Logout
+						</Button>
 					</div>
 				</div>
 			</div>
